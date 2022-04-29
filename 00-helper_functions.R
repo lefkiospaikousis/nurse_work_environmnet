@@ -1,12 +1,30 @@
-#' This script contains helper functions to enable table creation
+# This script contains helper functions to enable table creation
+
+
+#' Sets the Greek locale 
+set_greek_locale <- function(){
+  Sys.setlocale(locale = "greek")
+  
+}
+
+#' Score likert scales items
+#' 
+#' @param ... Variables to score. Using tidyselect way
+score <- function(...,  Means = TRUE, na.rm =  TRUE){
+  if(Means){
+    rowMeans(dplyr::across(...), na.rm = na.rm)
+  } else {
+    rowSums(dplyr::across(...), na.rm = na.rm)
+  }
+}
 
 #' Create wide table of frequencies (%) . SPSS like 
 #' 
 #' Supply a dataset with likert scale items and get a `wide`table with the items as rows
 #' and the likert respones as columns.
 #' 
-#' @details Make sure the dataset supplied is only the columns you want.Similar usage to \code{tbl_summary} functon
-#' of the \code{gtssummary} package
+#' @details Make sure the dataset supplied is only the columns you want.
+#' Similar usage to \code{tbl_summary} function of the \code{gtsummary} package
 #' @param data The dataset
 #' @param ... Other arguments passed to \code{tbl_summary} function
 aggregate_wide <- function(data, ...){
@@ -43,21 +61,6 @@ aggregate_wide <- function(data, ...){
 }
 
 
-#' Sets the Greek locale 
-set_greek_locale <- function(){
-  Sys.setlocale(locale = "greek")
-  
-}
-
-#' Score likert scales items
-#' 
-score <- function(...,  Means = TRUE, na.rm =  TRUE){
-  if(Means){
-    rowMeans(dplyr::across(...), na.rm = na.rm)
-  } else {
-    rowSums(dplyr::across(...), na.rm = na.rm)
-  }
-}
 
 #' Create a cross correlation table between two groups of variables
 #' 
@@ -84,7 +87,6 @@ tbl_cross_correlation <- function(.data, .colsx, .colsy, .method = "pearson", .d
   
   posX <- tidyselect::eval_select(exprX, data = .data)
   posY <- tidyselect::eval_select(exprY, data = .data)
-  
   
   
   if (length(posX) == 0) {

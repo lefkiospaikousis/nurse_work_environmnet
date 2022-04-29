@@ -1,5 +1,5 @@
-#' This script holds dimension names, labels, and other global values
-#' that will be needed in the analysis or plotting
+# This script holds dimension names, labels, and other global values
+# that will be needed in the analysis or plotting
 
 
 # Sys.setlocale("LC_CTYPE", locale = "Greek")
@@ -11,16 +11,16 @@ vars_demo <-
     "experience", "experience_icu", "position", 
     "workplace", "institution_type", "icu_type")
 
-# text vars
-# "position_other", "workplace_other" , "residence", "institution_name"
-# , "icu_type_2"
+text_vars <- c(
+  "position_other", "workplace_other" , "residence", "institution_name"
+  , "icu_type_2"
+)
 
 
 # Scales-------------------------------------------------------------------
 
 
 ## Section A ----
-
 
 
 ## Section B: Critical Elements of a Healthy Work Environment Scale ----
