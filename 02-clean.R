@@ -1,4 +1,4 @@
-# Script to CLEAN the processed dataset
+# Script to CLEAN the dataset
 # 
 
 # Libraries ---------------------------------------------------------------
@@ -29,8 +29,6 @@ dta <- dta %>%
   ) 
 
 # Section A ---------------------------------------------------------------
-
-# Lazare zoo
 
 dta <- 
   dta %>% 
@@ -63,7 +61,7 @@ dta <-
 
 # Section B ---------------------------------------------------------------
 
-# Ratings are scored 1,2,4,5. need to do it 1,2,3,4 zoo lazare
+# Ratings are scored 1,2,4,5. need to do it 1,2,3,4 
 
 dta <- 
   dta %>% 

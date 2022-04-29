@@ -1,7 +1,7 @@
 # Script to Read the datafiles and do some first processing
 # 
 # There are 2 datasets. One is the result of online submitting responses
-# and the other '.. -copy' is the result of inputing hard copy questionnaires
+# and the other '.. -copy' is the result of the manual input of  hard copy questionnaires
 
 
 # Libraries ---------------------------------------------------------------
