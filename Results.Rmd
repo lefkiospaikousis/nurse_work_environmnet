@@ -1,0 +1,1126 @@
+---
+title: "AACN Survey - 2022"
+subtitle: 
+date: "`r format(Sys.time(), '%B, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r include=FALSE}
+# Libraries ---------------------------------------------------------------
+
+library(gtsummary)
+library(haven)
+library(labelled)
+library(flextable)
+library(tidyverse)
+
+# Setup -------------------------------------------------------------------
+
+source("00-variable_info.R", local = TRUE)
+source("00-helper_functions.R", local = TRUE)
+
+gtsummary::set_gtsummary_theme(theme_gtsummary)
+
+flextable::set_flextable_defaults(
+  table.layout = "autofit"
+)
+
+dta <- readRDS("data/raw_cleaned.rds")
+
+labels <- labelled::var_label(dta)
+
+
+```
+
+
+\newpage
+## Demographics
+
+One thousand, four hundred and thirteen (1,413) RN’s participate in this study from 5 countries (Cyprus: n=264, Spain: n=437, Croatia: n=290, Poland: n=105, and Romania: n=317). With respect to their gender, 15% identified as Male, 52% as Female, and 33.3% preferred not to answer. Their mean age was 37.4 years (SD = 10.1). 
+
+
+```{r demographics}
+
+dta %>% 
+  mutate(
+    across(all_of(vars_demo) & where(is.labelled), 
+           ~ fct_explicit_na(as_factor(.), )
+    )
+  ) %>% 
+  select(country, all_of(vars_demo)) %>% 
+  mutate(across(where(is.labelled), as_factor)) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test")) %>% 
+  modify_caption("Demographic characteristics") %>% 
+  #as_flex_table() %>% 
+  #flextable::save_as_docx(path = "Demographics.docx") %>% 
+  {.}
+
+```
+
+\newpage
+## Section A ---------------------------------------------------------------
+
+### Job satisfaction as a RN
+
+
+```{r job_satisfaction}
+
+dta %>% 
+  transmute(
+    country,
+    satisfied_nurse = as_factor(satisfied_nurse)
+  ) %>%
+  tbl_summary(by = country) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test")) %>% 
+  modify_caption(labels$satisfied_nurse)
+
+```
+
+
+### Advice a qualified individual to pursue a career in Nursing
+
+
+```{r advice_nurse}
+
+dta %>% 
+  transmute(
+    country,
+    advice_nurse = as_factor(advice_nurse)
+  ) %>%
+  tbl_summary(by = country) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test")) %>% 
+  modify_caption(labels$advice_nurse)
+
+```
+
+
+
+### Quality of care for patients in your unit
+
+
+```{r quality_of_care}
+
+dta %>% 
+  transmute(
+    country,
+    quality_care = as_factor(quality_care)
+  ) %>%
+  tbl_summary(by = country) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test")) %>% 
+  modify_caption(labels$quality_care)
+
+```
+
+
+### Are you aware of any Healthy Work Environment Standards in ICU?
+
+
+Fifty-three percent (53%) stated they are aware of some Healthy Work Environment Standards in ICU. There were statistically significant differences (p<0.001) across the countries, with Spain having the lowest proportion of awareness (Cyprus:68%, Spain:27%, Croatia:65%, Poland:69%, Romania:62%)
+
+
+```{r awareness_hwe}
+
+dta %>% 
+  transmute(
+    country, aware_hwes = as_factor(aware_hwes)
+  ) %>%
+  tbl_summary(by = country) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test")) %>% 
+  modify_caption(labels$aware_hwes)
+
+```
+
+
+
+### Implementation of HWE standards
+
+Twenty-five percent (25.2%) stated that their UNIT is well on its way or has fully implemented some Healthy Work Environment Standards. There were statistically significant differences (p<0.001) across the countries, with Romania having the highest proportion (55%) of “Well on their way” or Full implementation”, and Spain and Poland having the lowest [Cyprus:30.9%, Spain:8.5%, Croatia:16.1%, Poland:10.5%, and Romania:55%]. An overall 31% are not aware if any standards have been implemented.    
+
+Similarly, 24.2% stated that their ORGANISATION is well on its way or has fully implemented some Healthy Work Environment Standards. There were statistically significant differences (p<0.001) across the countries, with Romania having the highest proportion (53%) of “Well on their way” or Full implementation”, and Spain and Poland having the lowest [Cyprus:27.6%, Spain:6.4%, Croatia:17.4%, Poland:11.5%, and Romania:53%]. An overall 36% are not aware if any standards have been implemented.    
+
+
+```{r implementation_hwe}
+
+dta %>% 
+  select(country, implement_hwes_unit, implement_hwes_org) %>%
+  mutate_all(as_factor) %>% 
+  tbl_summary(by = country) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test")) %>% 
+  modify_caption("Implementation of HWE standards")
+
+```
+
+
+
+```{r satisfaction_numeric, eval=FALSE, include=FALSE}
+# Satisfaction as numeric
+dta %>% 
+  select(country, satisfied_nurse:quality_care) %>%
+  filter(quality_care != 99) %>% 
+  # rev the score fo 1 = low,and 4 = high
+  mutate(across(where(is.labelled), ~ 5 - .)) %>% 
+  set_variable_labels(.labels = labels[c("satisfied_nurse", "advice_nurse", "quality_care")]) %>% 
+  tbl_summary(by = country,
+              type = list(everything() ~ "continuous")
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_caption("HWE-Section A: Mean level of satisfaction") %>% 
+  #as_flex_table() %>% 
+  #flextable::save_as_docx(path = "SectionA-Average_Satisfaction.docx") %>% 
+  {.}
+
+```
+
+\newpage
+## Section B -------------------------------------------------------------
+
+### Dimensions ----
+
+- __AACN Standards - In your Unit__
+
+Overall, in the 5 countries, with respect to the AACN’s six essential standards, and in the RN’s Unit, the mean Skilled Communication level is 2.3 (SD = 0.7) on the scale of 1 to 4, True collaboration mean level is at 2.5 (SD=0.7), Effective Decision Making is at 2.4 (0.6), Appropriate staffing is at 2.5 (0.7), Meaningful recognition at 2.5 (0.7) and Authentic leadership is at 2.5 (0.7).  There were statistically significant differences across the five countries in all six standards.    
+
+
+
+```{r dimensions_unit}
+
+dta %>% 
+  filter(section >= "Section B") %>%
+  select(country, all_of(dim__scales_unit)) %>% 
+  tbl_summary(by = country,
+              type = everything()~"continuous",
+              missing = "no"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = "**AACN Standard**") %>% 
+  modify_caption("Mean level (SD) of AACN Standars - In the Unit") %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
+  ) %>% 
+  # as_flex_table() %>%  
+  # flextable::save_as_docx(path = "HWE-Unit-Standards.docx") %>% 
+  {.}
+
+
+```
+
+- __AACN items - Unit__
+
+
+Table below, shows the mean level of agreement [1: Strongly Disagree, 4:Strongly Agree] in the 16 AACN items with respect to the Unit
+
+```{r items_unit}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  select(country, all_of(c(vars_hwes_unit))) %>% 
+  # rev the score fo 1 = low,and 5 = high
+  mutate(across(where(is.labelled), ~ 6 - .)) %>% 
+  set_variable_labels(.labels = labels[c(vars_hwes_unit)]) %>% 
+  tbl_summary(by = country,
+              type = list(everything() ~ "continuous"),
+              missing = "no"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = "") %>% 
+  modify_caption("HWE in your Unit: Mean (SD) level of agreement") %>% 
+  #as_flex_table() %>% 
+  #flextable::save_as_docx(path = "HWE-Unit-Average_Agreement.docx") %>% 
+  {.}
+
+```
+
+
+- __AACN Standards - In the Organisation__
+
+Overall, in the 5 countries, with respect to the AACN’s six essential standards, and in the RN’s Organisation, the mean Skilled Communication level is 2.3 (SD = 0.7) on the scale of 1 to 4, True collaboration mean level is at 2.5 (SD=0.7), Effective Decision Making is at 245 (0.6), Appropriate staffing is at 2.5 (0.7), Meaningful recognition at 2.5 (0.7) and Authentic leadership is at 2.5 (0.7).  There were statistically significant differences across the five countries in all six standards.    
+
+
+```{r dimensions_organisation}
+
+dta %>% 
+  filter(section >= "Section B") %>%
+  select(country, all_of(dim__scales_org)) %>% 
+  tbl_summary(by = country,
+              type = everything()~"continuous",
+              missing = "no"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = "**AACN Standard**") %>% 
+  modify_caption("Mean level (SD) of AACN Standars - In the Organisation") %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
+  ) %>% 
+  # as_flex_table() %>%  
+  # flextable::save_as_docx(path = "HWE-Organisation-Standards.docx") %>% 
+  {.}
+
+
+```
+
+- __AACN items - Organisation__
+
+
+Table below, shows the mean level of agreement [1: Strongly Disagree, 4:Strongly Agree] in the 16 AACN items with respect to the Organisation
+
+```{r items_organisation}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  select(country, all_of(c(vars_hwes_org))) %>% 
+  # rev the score fo 1 = low,and 5 = high
+  mutate(across(where(is.labelled), ~ 6 - .)) %>% 
+  set_variable_labels(.labels = labels[c(vars_hwes_org)]) %>% 
+  tbl_summary(by = country,
+              type = list(everything() ~ "continuous"),
+              missing = "no"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = "") %>% 
+  modify_caption("HWE in your Organisation: Mean (SD) level of agreement") %>% 
+  #as_flex_table() %>% 
+  #flextable::save_as_docx(path = "HWE-Unit-Average_Agreement.docx") %>% 
+  {.}
+
+```
+
+
+
+
+```{r HWE_all_items, eval=FALSE, include=FALSE}
+
+# ## All items - Categorical levels -----
+# 
+# dta %>% 
+#   filter(section >= "Section B") %>% 
+#   select(country, all_of(c(vars_hwes_unit))) %>% 
+#   mutate(across(where(is.labelled), as_factor)) %>% 
+#   tbl_summary(by = country,
+#               missing = "no"
+#   ) %>% 
+#   add_overall() %>% 
+#   modify_header(label = "**HWE in your unit**") %>% 
+#   as_flex_table() %>%  
+#   #flextable::save_as_docx(path = "HWE-Unit") %>% 
+#   {.}
+
+
+## All items - Percent of Agree, Strongly agree -----
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  select(country, all_of(vars_hwes_org)) %>% 
+  mutate(across(-country, ~ ifelse( . >2, 0, 1))) %>%
+  set_variable_labels(.labels = labels[vars_hwes_org]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  add_overall() %>% 
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_header(label = "") %>% 
+  modify_caption("HWE in your Organisation: Proportion of Strongly Agree/ Agree") %>% 
+  #as_flex_table() %>% 
+  #flextable::save_as_docx(path = "HWE-Organisation-Agre_Strongly_Agree.docx") %>% 
+  {.}
+
+
+## All items - Mean Values -----
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  select(country, all_of(c(vars_hwes_unit))) %>% 
+  # rev the score fo 1 = low,and 5 = high
+  mutate(across(where(is.labelled), ~ 6 - .)) %>% 
+  set_variable_labels(.labels = labels[c(vars_hwes_unit)]) %>% 
+  tbl_summary(by = country,
+              type = list(everything() ~ "continuous"),
+              missing = "no"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = "") %>% 
+  modify_caption("HWE in your Unit: Mean (SD) level of agreement") %>% 
+  #as_flex_table() %>% 
+  #flextable::save_as_docx(path = "HWE-Unit-Average_Agreement.docx") %>% 
+  {.}
+
+
+```
+
+
+\newpage
+## Section C ---------------------------------------------------------------
+
+
+### Communication 
+
+
+```{r communication}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_communication), as_factor),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") ) %>% 
+  modify_caption("How would you rate the quality of communication in your unit among the following?")
+
+```
+
+- __Combined Proportion - Excellent, Good__
+
+```{r communication_combined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_communication), ~if_else(. <=2, 1, 0)),
+    country
+  ) %>%  
+  set_variable_labels(.labels = labels[vars_communication]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "How would you rate the quality of communication in your unit among the      following?\n
+  Combined proportion of: Excellent/ Good")
+
+```
+
+
+### Collaboration 
+
+
+```{r Collaboration}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_collaboration), as_factor),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("How would you rate the quality of collaboration in your unit among the following?")
+
+```
+
+- __Combined Proportion - Excellent, Good__
+
+```{r Collaboration_combined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_collaboration), ~if_else(. <=2, 1, 0)),
+    country
+  ) %>%  
+  set_variable_labels(.labels = labels[vars_collaboration]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "How would you rate the quality of collaboration in your unit among the      following?\n
+  Combined proportion of: Excellent/ Good")
+
+```
+
+
+### Respect for nurses 
+
+
+```{r respect}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_respect_by), as_factor),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("In your unit how would you rate the respect for nurses by each of the following?")
+
+```
+
+- __Combined Proportion - Excellent, Good__
+
+```{r respect_comnbined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_respect_by), ~if_else(. <=2, 1, 0)),
+    country
+  ) %>%  
+  set_variable_labels(.labels = labels[vars_respect_by]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "In your unit how would you rate the respect for nurses by each of the following?\n
+  Combined proportion of: Excellent/ Good")
+
+```
+
+
+### Moral distress
+
+__Moral distress has been defined as occurring when you know the appropriate action to take, but you are unable to act upon it and/or you act in a manner contrary to your personal and professional values, which undermines your integrity and authenticity.__
+
+- "To what extent, in your work as a nurse do you experience moral distress?"
+
+```{r distress}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    moral_distress = as_factor(moral_distress),
+    country
+  ) %>% 
+  set_variable_labels(
+    moral_distress = "To what extent, in your work as a nurse do you experience moral distress?"
+  ) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("To what extent, in your work as a nurse do you experience moral distress?")
+
+
+```
+
+- __Combined Proportion - Very frequently, Frequently__
+
+```{r distress_combined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(c(moral_distress), ~if_else(. <=2, 1, 0)),
+    country
+  ) %>%  
+  set_variable_labels(
+    moral_distress = "To what extent, in your work as a nurse do you experience moral distress?"
+  ) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "To what extent, in your work as a nurse do you experience moral distress?\n
+  Combined proportion of: Very frequently, Frequently")
+
+```
+
+
+### Staffing for the unit
+
+__With regard to staffing for your unit how often do you have the right number of registered nurses with the right knowledge and skills?__
+
+
+```{r staffing}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    staffing_right = as_factor(staffing_right),
+    country
+  ) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(labels$staffing_right)
+
+
+```
+
+### Skills of unit's nursing managers
+
+- __Please rate the skill of your unit Nursing managers in the following areas__
+
+
+```{r skills_managers}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_skills_manager), as_factor),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("Please rate the skill of your unit Nursing managers in the following areas")
+
+```
+
+- __Combined Proportion - Excellent, Good__
+
+```{r skills_managers_combined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_skills_manager), ~if_else(. <=2, 1, 0)),
+    country
+  ) %>%  
+  set_variable_labels(.labels = labels[vars_skills_manager]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "Please rate the skill of your unit Nursing managers in the following areas\n
+  Combined proportion of: Excellent/ Good")
+
+```
+
+
+### Skills of unit's nursing administrators
+
+- __Please rate the skill of your unit Nursing administrators in the following areas__
+
+
+```{r skills_admins}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_skills_admin), as_factor),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("Please rate the skill of your unit Nursing administrators in the following areas")
+
+```
+
+- __Combined Proportion - Excellent, Good__
+
+```{r skills_admins_combined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_skills_admin), ~if_else(. <=2, 1, 0)),
+    country
+  ) %>%  
+  set_variable_labels(.labels = labels[vars_skills_admin]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "Please rate the skill of your unit Nursing administrators in the following areas\n
+  Combined proportion of: Excellent/ Good")
+
+```
+
+
+### Main factors that keep RNs working in their current organization
+
+- __What are the main factors that keep you working in your current organization?__
+
+```{r factors_keep_work}
+
+dta %>% 
+  transmute(
+    across(all_of(vars_factors_keep_work), as.numeric),
+    country
+  ) %>% 
+  set_variable_labels(.labels = labels[vars_factors_keep_work]) %>% 
+  tbl_summary(by = country, missing = "no") %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "What are the main factors that keep you working in your current organization?")
+
+
+```
+
+
+
+- _Other Please specify__
+
+
+```{r factors_keep_work_other}
+dta %>% 
+  filter(section == "Section C") %>% 
+  filter(fact_other == 1) %>%  #other)
+  select(country, text_fact_other) %>% 
+  filter(text_fact_other != "") %>% 
+  arrange(country) %>% 
+  rename(
+    "What are the main factors that keep you working in your current organization?" = text_fact_other
+  ) %>%
+  flextable() %>% 
+  merge_v(j=1) %>% 
+  flextable::theme_box() %>% 
+  set_caption("	
+What are the main factors that keep you working in your current organization? - Other (please specify)")
+
+```
+
+
+
+### Abuse incidents
+
+__In the past year, in your work as a nurse, please indicate the number of times you personally experienced each of the following?__
+
+```{r incidents, include=FALSE}
+
+n_completed <- dta %>% filter(section == "Section C") %>% nrow()
+
+n_abuse <- dta %>% filter(section == "Section C", incident_any == 1) %>% nrow()
+
+pct_abuse <- scales::percent(n_abuse / n_completed, accuracy = 0.1)
+
+```
+
+This question was answered by `r n_completed` RNs.  
+
+A total of `r n_abuse` (`r pct_abuse`) RNs reported at least 1 incident 
+
+```{r incident_any}
+
+dta %>% 
+  filter(section == "Section C") %>%
+  select(incident_any, country) %>% 
+  tbl_summary(by = country) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  modify_caption("Proportion of RNs reporting at least one incident of harassment")
+
+
+```
+
+
+- __Number of Incidents__
+
+Table show the total number of incidents reported by RNs.    
+
+
+
+```{r incident_numbers}
+
+#dta %>% count(abuse_verb_physician)
+
+dta %>% 
+  filter(incident_any == 1) %>% 
+  select(all_of(vars_incident_all)) %>% 
+  pivot_longer(everything()) %>%
+  extract(name , 
+          into = c("abuse", "perpetrator"), 
+          regex = "(abuse_phys|abuse_verb|discrim|harass)_(.+)") %>% 
+  group_by(abuse, perpetrator) %>% 
+  summarise(N = sum(value), .groups = "drop") %>% 
+  mutate(
+    abuse = recode(abuse, 
+                   "abuse_phys" = "Physical abuse",
+                   "abuse_verb" = "Verbal abuse",
+                   "discrim" = "Discrimination",
+                   "harass" = "Harassment",
+    ),
+    
+    perpetrator = fct_recode(perpetrator, 
+                             !!!c("Another nurse" = "nurse",
+                                  "Patients" = "patients",
+                                  "A physician" = "physician",
+                                  "A nurse manager" = "manager",
+                                  "An administrator" = "administration",
+                                  "Patients' families" = "families",
+                                  "Other health care personnel" = "other"
+                                  
+                             ))#str_to_title(perpetrator)
+  ) %>%  
+  spread(abuse, N) %>% 
+  rowwise() %>% 
+  mutate(Total = sum(c_across(-perpetrator))) %>% 
+  arrange(desc(Total)) %>% 
+  rename(Perpepretor = perpetrator) %>% 
+  ungroup() %>% 
+  flextable::flextable() %>% 
+  set_caption("Number of incidents - by Type and Perpeprator")
+
+
+
+```
+
+
+### Have you reported the incidents?    
+
+- Two hundred and ninety-five (295 - 45%) did not report any of the incidents that occurred
+
+- Three hundred and fifty seven (357 - 55%) did report at lest some of them.
+
+```{r reported, message=FALSE, warning=FALSE}
+# 
+# dta %>% count(reported_incident, incident_any) %>% 
+#   spread(incident_any, n)
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  filter(incident_any == 1) %>% 
+  transmute(reported_incident = as_factor(reported_incident),
+            country) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  modify_caption("Report of the incident")
+
+
+```
+
+
+### Reported the incident    
+
+
+__What happened when you reported the incident(s)?__    
+
+
+```{r report_what_happened}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  filter(incident_any == 1,
+         reported_incident !=0
+  ) %>%
+  transmute(report_after = as_factor(report_after),
+            country) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  modify_caption("What happened after you reported the incident")
+
+```
+
+
+- _Other Please specify__
+
+
+```{r report_other}
+dta %>% 
+  filter(section == "Section C") %>% 
+  filter(incident_any == 1,
+         reported_incident !=0,
+         report_after == 7 #other
+  ) %>% 
+  select(country, text_report_after) %>% 
+  filter(text_report_after != "") %>% 
+  arrange(country) %>% 
+  rename(
+    "What happened when you reported the incident(s)? - Other (please specify)" = text_report_after
+  ) %>% 
+  flextable() %>% 
+  merge_v(j=1) %>% 
+  flextable::theme_box() %>% 
+  set_caption("	
+What happened when you reported the incident(s)? - Other (please specify)")
+
+```
+
+
+### Did not report the incident    
+
+- __In case you did not report the incident (s), why did you decide not to report it?__    
+
+```{r didnotReport}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  filter(incident_any == 1,
+         reported_incident ==0
+  ) %>%
+  transmute(
+    no_report_why = as_factor(no_report_why),
+    country
+  ) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>% 
+  modify_caption("Why did you decide not to report the incident?")
+
+```
+
+
+- __In case you did not report the incident (s), why did you decide not to report it? - Other(please specify)__
+
+
+```{r didnotReport_other}
+
+#dta %>% count(no_report_why)
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  filter(incident_any == 1,
+         reported_incident ==0,
+         no_report_why == 8 #other
+  ) %>% 
+  select(country, text_no_report_why) %>% 
+  filter(text_no_report_why != "") %>% 
+  arrange(country) %>% 
+  rename(
+    "Other (please specify)" = text_no_report_why
+  ) %>% 
+  flextable() %>% 
+  merge_v(j=1) %>% 
+  flextable::theme_box() %>% 
+  set_caption("Why did you decide not to report it? - Other (please specify)")
+
+```
+
+
+### Recognition is most meaningful when it comes from 
+
+```{r recognition}
+
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    recognition_meaningful = as_factor(recognition_meaningful),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("Meaningful recognition")
+
+
+```
+
+### My organization values my health and safety
+
+```{r values_health_safety}
+
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    value_health_safety = as_factor(value_health_safety),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("My organization values my health and safety")
+
+
+```
+
+
+### Work done at the end of a typical shift
+
+
+```{r work_done}
+# Note that missing here, is the N/A (Not Applicable) option
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(all_of(vars_work_done), country) %>% 
+  mutate(across(where(is.labelled), as_factor)) %>% 
+  tbl_summary(
+    by = country,
+    missing_text = "(Not applicable)"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("At the end of a typical shift, to what degree do you get the following work done?")
+
+```
+
+### To what extent are you evaluated on how well you contribute to a healthy work environment for you and your colleagues?
+
+```{r evaluate_contribution}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(evaluate_contrib_hwe = as_factor(evaluate_contrib_hwe),
+            country) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("To what extent are you evaluated on how well you contribute to a healthy work environment for you and your colleagues?")
+
+
+```
+
+
+### On the whole, how satisfied are you with your current job?
+
+```{r overall_satisfaction}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(satisfied_overall = as_factor(satisfied_overall),
+            country) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("On the whole, how satisfied are you with your current job?")
+
+
+```
+
+
+### Plan to leave their present nursing position
+
+```{r plan_to_leave}
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(plan_leave = as_factor(plan_leave),
+            country) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("Do you plan to leave your present nursing position?")
+
+```
+
+### Influence in reconsidering plans to leave present position    
+
+
+```{r influence_leave_job}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(all_of(vars_influence), country) %>% 
+  mutate(across(where(is.labelled), as_factor)) %>% 
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("How likely would each of the following be to influence you to reconsider your plans to leave your present position?")
+
+```
+
+- __Combined Proportion - Very likely, Somewhat likely__
+
+```{r influence_leave_job_combined}
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(all_of(vars_influence), country) %>% 
+  mutate(across(where(is.labelled), ~if_else(. <=2, 1, 0))) %>%
+  set_variable_labels(.labels = labels[vars_influence]) %>% 
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("How likely would each of the following be to influence you to reconsider your plans to leave your present position?\n
+                 Combined proportion of: Very likely/ Somewhat likely")
+
+```
+
+
+### Support of continuing education (CE) and specialty certification
+
+```{r support_education}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(c(support_education, support_certification), as_factor),
+    country
+  ) %>%   
+  tbl_summary(
+    by = country
+  ) %>% 
+  modify_header(label = "") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption("Support of continuing education (CE) and specialty certification")
+
+```
+
+
+
