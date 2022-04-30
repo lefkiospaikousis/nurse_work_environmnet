@@ -349,14 +349,26 @@ dta %>%
 
 
 ## C13, C14 ---------------------------------------------------------------------
-
+# fix the values for value_health_safety
 dta %>% 
   filter(section == "Section C") %>% 
-  count(recognition_meaningful) %>% 
-  #count(value_health_safety) %>% 
+  #count(recognition_meaningful) %>% 
+  count(value_health_safety) %>% 
   {.}
 
-
+dta <- dta %>% 
+  mutate(
+    value_health_safety = recode(value_health_safety, "1" = 1, "4" = 2, "5" = 3, "6" = 4),
+    value_health_safety = ifelse(is.na(value_health_safety) & section == "Section C", 
+                                 median(value_health_safety, na.rm = T), 
+                                 value_health_safety),
+      # add labels now
+    value_health_safety = labelled(value_health_safety, 
+                                   labels = c('Strongly agree' = 1,
+                                              'Agree' = 2,
+                                              'Disagree' = 3,
+                                              'Strongly disagree' = 4))
+    )
 
 ## C15 ---------------------------------------------------------------------
 # At the end of a typical shift, to what degree do you get the following work done?
