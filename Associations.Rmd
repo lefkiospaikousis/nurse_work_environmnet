@@ -1,0 +1,168 @@
+---
+title: "AACN Survey - 2022"
+subtitle: 
+date: "`r format(Sys.time(), '%B, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r include=FALSE}
+# Libraries ---------------------------------------------------------------
+
+library(gtsummary)
+library(haven)
+library(labelled)
+library(flextable)
+library(glue)
+library(tidyverse)
+
+# Setup -------------------------------------------------------------------
+
+source("00-variable_info.R", local = TRUE)
+source("00-helper_functions.R", local = TRUE)
+
+gtsummary::set_gtsummary_theme(theme_gtsummary)
+
+flextable::set_flextable_defaults(
+  table.layout = "autofit"
+)
+
+dta <- readRDS("data/raw_cleaned.rds")
+
+labels <- labelled::var_label(dta)
+
+
+```
+
+
+\newpage
+## Associations
+
+
+### Perceptions of work environments based on intent to leave
+
+
+
+```{r}
+# vars_communication, vars_collaboration do a reverse coding, so higher means better 
+
+group_var <- "Communication"
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_communication), ~ 5 - .),
+    plan_leave = as_factor(plan_leave)
+  ) %>% 
+  set_variable_labels(.labels = labels[names(.)]) %>% 
+  tbl_summary(
+    by = plan_leave,
+    type = everything() ~ "continuous"
+  ) %>% 
+  modify_header(label = group_var) %>% 
+  add_p() %>% 
+  modify_caption(
+    glue(
+    "Intention to leave Vs\n
+    How would you rate the quality of {group_var} in your unit among the following?")) %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of quality of {group_var}")) 
+
+
+
+```
+
+```{r}
+# vars_communication, vars collaboration do a reverse coding, so higher means better 
+
+group_var <- "Collaboration"
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_collaboration), ~ 5 - .),
+    plan_leave = as_factor(plan_leave)
+  ) %>% 
+  set_variable_labels(.labels = labels[names(.)]) %>% 
+  tbl_summary(
+    by = plan_leave,
+    type = everything() ~ "continuous"
+  ) %>% 
+  modify_header(label = group_var) %>% 
+  modify_caption(
+    glue(
+    "Intention to leave Vs\n
+    How would you rate the quality of {group_var} in your unit among the following?")) %>% 
+  add_p() %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ glue::glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of quality of {group_var}")) 
+
+
+```
+
+
+
+```{r}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_respect_by), ~ 5 - .),
+    plan_leave = as_factor(plan_leave)
+  ) %>% 
+  set_variable_labels(.labels = labels[names(.)]) %>% 
+  tbl_summary(
+    by = plan_leave,
+    type = everything() ~ "continuous"
+  ) %>% 
+  modify_header(label = "**Respect by**") %>% 
+  modify_caption(
+    glue(
+    "Intention to leave Vs\n
+    In your unit how would you rate the respect for nurses by each of the following?")) %>% 
+  add_p() %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ glue::glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of respect")) 
+
+
+```
+
+
+```{r}
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    plan_leave = as_factor(plan_leave), 
+    across(
+      c(quality_care, hwes_12_unit, value_health_safety,moral_distress), ~ 5 - .
+    ),
+    staffing_right = if_else(staffing_right >= 4, 1, 0)
+    ) %>% 
+  set_variable_labels(.labels = labels[names(.)]) %>% 
+  tbl_summary(
+    by = plan_leave,
+    type = list( c(quality_care, hwes_12_unit, value_health_safety,moral_distress) ~ "continuous"),
+    missing = "no"
+  ) %>% 
+  modify_header(label = "**Respect by**") %>% 
+  modify_caption(
+    glue(
+    "Intention to leave Vs\n
+    Perceptions of work environments")) %>% 
+  add_p() %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ glue::glue("n(%) for Right Staffing All the time, or more than 75% of the time.\n
+  Mean(SD) for the rest. Mean of scores ranging from   
+  1:Poor, 2:Fair, 3:Good, to 4:Excellent for 'Quality of Care';  
+  1:Strongly disagree, 2:Disagree, 3:Agree, to 4:Strongly agree for 'RNs are recognized for the value' and 'My organization values my health and safety';  
+  1:Very Rarely, 2:Occasionally, 3:Frequently, to 4:Very Frequently for 'Moral Distress'")) 
+
+
+```
+
