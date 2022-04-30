@@ -524,9 +524,6 @@ dta %>%
     moral_distress = as_factor(moral_distress),
     country
   ) %>% 
-  set_variable_labels(
-    moral_distress = "To what extent, in your work as a nurse do you experience moral distress?"
-  ) %>% 
   tbl_summary(
     by = country
   ) %>% 
@@ -547,9 +544,7 @@ dta %>%
     across(c(moral_distress), ~if_else(. <=2, 1, 0)),
     country
   ) %>%  
-  set_variable_labels(
-    moral_distress = "To what extent, in your work as a nurse do you experience moral distress?"
-  ) %>% 
+  set_variable_labels(.labels = labels[names(.)]) %>% 
   tbl_summary(
     by = country,
     missing = "no"
