@@ -42,7 +42,7 @@ labels <- labelled::var_label(dta)
 \newpage
 ## Demographics
 
-One thousand, four hundred and thirteen (1,413) RN’s participate in this study from 5 countries (Cyprus: n=264, Spain: n=437, Croatia: n=290, Poland: n=105, and Romania: n=317). With respect to their gender, 15% identified as Male, 52% as Female, and 33.3% preferred not to answer. Their mean age was 37.4 years (SD = 10.1). 
+One thousand, four hundred and thirteen (1,413) RNs participated in this study from 5 countries (Cyprus: n=264, Spain: n=437, Croatia: n=290, Poland: n=105, and Romania: n=317). With respect to their gender, 15% identified as Male, 52% as Female, and 33.3% preferred not to answer. Their mean age was 37.4 years (SD = 10.1). 
 
 
 ```{r demographics}
@@ -70,7 +70,7 @@ dta %>%
 \newpage
 ## Section A ---------------------------------------------------------------
 
-### Job satisfaction as a RN
+### Job satisfaction as an RN
 
 
 ```{r job_satisfaction}
@@ -159,7 +159,7 @@ Similarly, 24.2% stated that their ORGANISATION is well on its way or has fully 
 
 ```{r implementation_hwe}
 
-dta %>% 
+  dta %>% 
   select(country, implement_hwes_unit, implement_hwes_org) %>%
   mutate_all(as_factor) %>% 
   tbl_summary(by = country) %>% 
@@ -168,7 +168,11 @@ dta %>%
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
   modify_caption("Implementation of HWE standards")
 
+
+
 ```
+
+
 
 
 
@@ -187,8 +191,7 @@ dta %>%
   add_overall() %>% 
   add_p() %>% 
   modify_caption("HWE-Section A: Mean level of satisfaction") %>% 
-  #as_flex_table() %>% 
-  #flextable::save_as_docx(path = "SectionA-Average_Satisfaction.docx") %>% 
+  as_flex_table() %>% 
   {.}
 
 ```
