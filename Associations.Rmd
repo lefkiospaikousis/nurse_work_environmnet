@@ -41,18 +41,19 @@ labels <- labelled::var_label(dta)
 
 
 \newpage
-## Associations
+## Perceptions of work environments based on intent to leave
 
 
-### Perceptions of work environments based on intent to leave
+### Quality of Collaboration and Intention to leave
+
+Some text here....    
 
 
 
 ```{r}
 # vars_communication, vars_collaboration do a reverse coding, so higher means better 
 
-group_var <- "Communication"
-
+tbl <- 
 dta %>% 
   filter(section == "Section C") %>% 
   transmute(
@@ -64,23 +65,30 @@ dta %>%
     by = plan_leave,
     type = everything() ~ "continuous"
   ) %>% 
-  modify_header(label = group_var) %>% 
+  modify_header(label = "Communication") %>% 
+    modify_spanning_header(
+    all_stat_cols() ~ labels$plan_leave
+  ) %>% 
   add_p() %>% 
   modify_caption(
     glue(
-    "Intention to leave Vs\n
-    How would you rate the quality of {group_var} in your unit among the following?")) %>% 
+      "Intention to leave Vs\n
+    How would you rate the quality of Communication in your unit among the following?")) %>% 
   modify_footnote(
-    update = all_stat_cols() ~ glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of quality of {group_var}")) 
-
+    update = all_stat_cols() ~ glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of quality of Communication")) 
 
 
 ```
 
+
+### Quality of Collaboration and Intention to leave
+
+Some text here....    
+
+
+
 ```{r}
 # vars_communication, vars collaboration do a reverse coding, so higher means better 
-
-group_var <- "Collaboration"
 
 dta %>% 
   filter(section == "Section C") %>% 
@@ -93,17 +101,26 @@ dta %>%
     by = plan_leave,
     type = everything() ~ "continuous"
   ) %>% 
-  modify_header(label = group_var) %>% 
-  modify_caption(
-    glue(
-    "Intention to leave Vs\n
-    How would you rate the quality of {group_var} in your unit among the following?")) %>% 
+  modify_header(label = 'Collaboration') %>% 
+  modify_spanning_header(
+    all_stat_cols() ~ labels$plan_leave
+  ) %>% 
   add_p() %>% 
   modify_footnote(
-    update = all_stat_cols() ~ glue::glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of quality of {group_var}")) 
+    update = all_stat_cols() ~ glue::glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of quality of Collaboration")
+    ) %>% 
+    modify_caption(
+    glue(
+      "Intention to leave Vs\n
+    How would you rate the quality of Collaboration in your unit among the following?"))
 
 
 ```
+
+
+### Respect and Intention to leave
+
+Some text here....    
 
 
 
@@ -121,16 +138,26 @@ dta %>%
     type = everything() ~ "continuous"
   ) %>% 
   modify_header(label = "**Respect by**") %>% 
-  modify_caption(
-    glue(
-    "Intention to leave Vs\n
-    In your unit how would you rate the respect for nurses by each of the following?")) %>% 
+  modify_spanning_header(
+    all_stat_cols() ~ labels$plan_leave
+  ) %>% 
   add_p() %>% 
   modify_footnote(
-    update = all_stat_cols() ~ glue::glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of respect")) 
+    update = all_stat_cols() ~ glue::glue("Mean (SD) / Mean of scores ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent; a higher score indicates a higher level of respect")
+    ) %>% 
+    modify_caption(
+    glue(
+      "Intention to leave Vs\n
+    In your unit how would you rate the respect for nurses by each of the following?"))
 
 
 ```
+
+
+### Intention to leave Vs Perceptions of work environments
+
+
+Some text here ....
 
 
 ```{r}
@@ -140,10 +167,10 @@ dta %>%
   transmute(
     plan_leave = as_factor(plan_leave), 
     across(
-      c(quality_care, hwes_12_unit, value_health_safety,moral_distress), ~ 5 - .
+      c(quality_care, hwes_12_unit, value_health_safety, moral_distress), ~ 5 - .
     ),
     staffing_right = if_else(staffing_right >= 4, 1, 0)
-    ) %>% 
+  ) %>% 
   set_variable_labels(.labels = labels[names(.)]) %>% 
   tbl_summary(
     by = plan_leave,
@@ -153,7 +180,7 @@ dta %>%
   modify_header(label = "**Respect by**") %>% 
   modify_caption(
     glue(
-    "Intention to leave Vs\n
+      "Intention to leave Vs\n
     Perceptions of work environments")) %>% 
   add_p() %>% 
   modify_footnote(
@@ -163,6 +190,201 @@ dta %>%
   1:Strongly disagree, 2:Disagree, 3:Agree, to 4:Strongly agree for 'RNs are recognized for the value' and 'My organization values my health and safety';  
   1:Very Rarely, 2:Occasionally, 3:Frequently, to 4:Very Frequently for 'Moral Distress'")) 
 
+
+```
+
+
+
+### Relationships between __AACN Standards__, and Job satisfactin , Collaboration, Communication, Intention to leave and Moral Distress
+
+- AACN Standards with respect to the Organisation
+
+Some text here
+
+```{r}
+
+dta %>% 
+  mutate(
+    # make inappropriate staffing = 1 so the same direction as with 
+    # AACN scales (negative direction)
+    staffing_right = ifelse(staffing_right >= 4, 0, 1)
+  ) %>% 
+  set_variable_labels(
+    staffing_right = "Appropriate staffing in the unit(more than 75% of time or all of the time)"
+  ) %>% 
+  tbl_cross_correlation(
+    .colsx = 
+      c( 
+        all_of(vars_communication),
+        all_of(vars_collaboration),
+        moral_distress,
+        quality_care,
+        # job satisfaction
+        staffing_right,
+        satisfied_nurse,
+        satisfied_overall,
+        all_of(vars_respect_by)
+      ),
+    .colsy = all_of(dim__scales_org)
+  ) %>% 
+  rename(" " = colsx) %>% 
+  flextable() %>% 
+  flextable::add_header_row( 
+    values = c("", "AACN Standards (Organisation level)"), 
+    colwidths = c(1,6)
+  ) %>% 
+  add_footer_row(
+    values = c("Note: Spearman correlation coefficients (r). All correlations are significant at the 0.01 level (2-tailed). ", ""), 
+    colwidths = c(6, 1) 
+  ) %>% 
+  add_footer_row(
+    values = c("AACN, American Association of Critical-Care Nurses;"), 
+    colwidths = 7
+  ) %>% 
+  set_caption(
+    "Correlation (Spearman r) between AACN Standards (Organisation level), 
+    and Job satisfactin , Collaboration, Communication, Intention to leave 
+    and Moral Distress")
+
+```
+
+
+- AACN Standards with respect to the Unit
+
+Some text here
+
+```{r}
+
+dta %>% 
+  mutate(
+    # make inappropriate staffing = 1 so the same direction as with AACN scales (negative direction)
+    staffing_right = ifelse(staffing_right >= 4, 0, 1)
+  ) %>% 
+  set_variable_labels(
+    staffing_right = "Appropriate staffing in the unit(more than 75% of time or all of the time)"
+  ) %>% 
+  tbl_cross_correlation(
+    .colsx = 
+      c( 
+        all_of(vars_communication),
+        all_of(vars_collaboration),
+        moral_distress,
+        quality_care,
+        # job satisfaction
+        staffing_right,
+        satisfied_nurse,
+        satisfied_overall,
+        all_of(vars_respect_by)
+      ),
+    .colsy = all_of(dim__scales_unit)
+  ) %>% 
+  rename(" " = colsx) %>% 
+  flextable() %>% 
+  flextable::add_header_row(
+    values = c("", "AACN Standards (Unit level)"), 
+    colwidths = c(1,6)
+  ) %>% 
+  add_footer_row(
+    values = c("Note: Spearman correlation coefficients (r). 
+               All correlations are significant at the 0.01 level (2-tailed)."),
+    colwidths = c(7) 
+  ) %>% 
+  add_footer_row(
+    values = c("AACN, American Association of Critical-Care Nurses;"), 
+    colwidths = 7
+  ) %>% 
+  set_caption(
+    "Correlation (Spearman r) between AACN Standards (Unit level), 
+    and Job satisfactin , Collaboration, Communication, Intention to leave 
+    and Moral Distress")
+
+
+
+```
+
+
+### Association of Respect and HWE implemtation level
+
+Some text here....    
+
+
+```{r}
+
+dta %>% 
+  mutate(
+    across(all_of(vars_respect_by), ~ 5 - .)
+  ) %>% 
+  set_variable_labels(.labels = labels[vars_respect_by]) %>% 
+  select(
+    implement_hwes_unit,
+    all_of(vars_respect_by)
+  ) %>% 
+  mutate(implement_hwes_unit = as_factor(implement_hwes_unit)) %>% 
+  tbl_summary(
+    by = implement_hwes_unit,
+    missing = "no",
+    type = everything()~ "continuous"
+  ) %>% 
+  add_p() %>% 
+  modify_header(label = "Respect by") %>% 
+  modify_caption(
+    "Correlations between implementation of AACN HWE standards and 
+    Respect satisfaction levels") %>% 
+  modify_spanning_header(
+    all_stat_cols() ~ labels$implement_hwes_org
+  ) %>% 
+  modify_footnote(
+    p.value ~ "One-way ANOVA\n
+  Note: Mean of scores (SD) ranging from 1:Poor, 2:Fair, 3:Good, to 4:Excellent for 'Respect satisfaction level'" 
+  )
+
+```
+
+
+
+### Relationship betwen __Respect__ and Job satisfaction, Communication, Collaboration, Moral DIstress and Intention to leave    
+
+Some text here....    
+
+
+```{r}
+
+dta %>% 
+  mutate(
+    # make inappropriate staffing = 1 so the same direction as 
+    # with AACN scales (negative direction)
+    plan_leave = ifelse(plan_leave == 3, 1, 0)
+  ) %>% 
+  set_variable_labels(
+    plan_leave = "Intention to leave within 1 or 3 years"
+  ) %>% 
+  tbl_cross_correlation(
+    c( 
+      all_of(vars_communication),
+      all_of(vars_collaboration),
+      plan_leave,
+      moral_distress,
+      # job satisfaction
+      satisfied_nurse,
+      satisfied_overall
+    ),
+    all_of(vars_respect_by)
+  ) %>% 
+  rename(" " = colsx) %>% 
+  flextable() %>% 
+  flextable::add_header_row(
+    values = c("", 
+               "In your unit how would you rate the respect for nurses 
+               by each of the following?"), 
+    colwidths = c(1,5)
+  ) %>% 
+  add_footer_row(
+    values = c("Note: Spearman correlation coefficients (r). 
+               All correlations are significant at the 0.01 level (2-tailed). "), 
+    colwidths = c(6) 
+  ) %>% 
+    set_caption(
+    "Correlation between Respect and Job satisfaction, Communication, Collaboration, Moral DIstress and Intention to leave")
 
 ```
 
