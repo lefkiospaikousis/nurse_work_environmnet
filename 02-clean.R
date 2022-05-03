@@ -28,6 +28,13 @@ dta <- dta %>%
   )
   ) 
 
+# 1 RN stated -1 as experience
+dta <- 
+  dta %>% 
+  mutate(
+    across(c(experience, experience_icu), abs)
+  )
+
 # Section A ---------------------------------------------------------------
 
 dta <- 
@@ -362,13 +369,13 @@ dta <- dta %>%
     value_health_safety = ifelse(is.na(value_health_safety) & section == "Section C", 
                                  median(value_health_safety, na.rm = T), 
                                  value_health_safety),
-      # add labels now
+    # add labels now
     value_health_safety = labelled(value_health_safety, 
                                    labels = c('Strongly agree' = 1,
                                               'Agree' = 2,
                                               'Disagree' = 3,
                                               'Strongly disagree' = 4))
-    )
+  )
 
 ## C15 ---------------------------------------------------------------------
 # At the end of a typical shift, to what degree do you get the following work done?
