@@ -430,10 +430,11 @@ dta <- dta %>%
   # C18
   
   mutate(
-    plan_leave = recode(plan_leave, "1" = 1, "4" = 2, "5" = 3),
+    plan_leave = recode(plan_leave, "1" = 2, "4" = 1, "5" = 3),
     plan_leave = ifelse(is.na(plan_leave) & section == "Section C", 3, plan_leave),
-    plan_leave = labelled(plan_leave, labels = c('Yes, within the next 12 months' = 1,
-                                                 'Yes, within the next 3 years' = 2,
+    plan_leave = labelled(plan_leave, labels = c(
+                                                 'Yes, within the next 3 years' = 1,
+                                                 'Yes, within the next 12 months' = 2,
                                                  'No plans to leave within the next 3 years' = 3
     ))
   )  
