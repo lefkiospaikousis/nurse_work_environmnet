@@ -9,6 +9,9 @@ set_greek_locale <- function(){
 
 #' Score likert scales items
 #' 
+#' @details So many thanks to Mattan! (thanks dude)
+#' https://gist.github.com/mattansb/eb7d5dbe92e129f462c2f1288efd1615
+#' 
 #' @param ... Variables to score. Using tidyselect way
 score <- function(...,  Means = TRUE, na.rm =  TRUE){
   if(Means){
@@ -117,7 +120,7 @@ tbl_cross_correlation <- function(.data, .colsx, .colsy, .method = "pearson", .d
       p = purrr::map_dbl(cor_test, ~ .$p.value)
     ) 
   
-  if(!is_empty(lab_list)){
+  if(!purrr::is_empty(lab_list)){
     
     out <- out %>% 
       mutate(
@@ -136,7 +139,6 @@ tbl_cross_correlation <- function(.data, .colsx, .colsy, .method = "pearson", .d
     ),
     r = paste0(r, sig)) %>% 
     select(colsx, colsy, r) %>% 
-    #rename_with(~col_name, colsx) %>% 
     tidyr::pivot_wider(
       names_from = colsy,
       values_from = r
