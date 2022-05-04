@@ -3,8 +3,8 @@ title: "AACN Survey - 2022"
 subtitle: 
 date: "`r format(Sys.time(), '%B, %Y')`"
 output:
-  word_document: default
   html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -36,6 +36,8 @@ dta <- readRDS("data/raw_cleaned.rds")
 
 labels <- labelled::var_label(dta)
 
+# in case Respect by variables are shown independenly
+new_respect_labs <- labels[vars_respect_by] %>%  map(~ paste0("Respect by:", .))
 
 ```
 
@@ -44,16 +46,88 @@ labels <- labelled::var_label(dta)
 ## Perceptions of work environments based on intent to leave
 
 
-### Quality of Collaboration and Intention to leave
-
-Some text here....    
+### Quality of Communication and Intention to leave
 
 
+### Percentage wise
+
+```{r}
+
+new_comm_labs <- labels[vars_communication] %>%  map(~ paste0(., " rated Good or Excellent"))
+
+by_plan <- function(dta, variable){
+  
+  out <- dta %>% 
+  transmute(
+    plan_leave = as_factor(plan_leave),
+    {{variable}} := as_factor({{variable}})
+  ) %>% 
+  tbl_summary(by = {{variable}},
+              percent = "row"
+              )  
+  #add_overall() 
+  temp <- deparse(substitute(variable))
+  out %>% 
+    modify_spanning_header(
+    all_stat_cols() ~ labels[[temp]]
+  ) 
+
+  
+}
+
+by_plan(commun_administration)
+
+dta %>% 
+  transmute(
+    plan_leave = as_factor(plan_leave),
+    commun_physicians = as_factor(commun_physicians)
+  ) %>% 
+  tbl_summary(by = commun_physicians,
+              percent = "row"
+              ) %>% 
+  #add_overall() %>% 
+  modify_spanning_header(
+    all_stat_cols() ~ labels$commun_physicians
+  )
+
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  transmute(
+    across(all_of(vars_communication), ~ if_else(. %in% c(1,2) , 1, 0)),
+    plan_leave = as_factor(plan_leave)
+  ) %>% 
+  set_variable_labels(.labels = labels[names(.)]) %>% 
+  set_variable_labels(.labels = new_comm_labs) %>% 
+  tbl_summary(
+    by = plan_leave,
+    statistic = all_categorical() ~ "{p}%"
+    #,digits = all_categorical() ~ 1
+  ) %>% 
+  modify_header(label = "Communication") %>% 
+    modify_spanning_header(
+    all_stat_cols() ~ labels$plan_leave
+  ) %>% 
+  add_p() %>% 
+  modify_caption(
+    glue(
+      "Intention to leave Vs\n
+    How would you rate the quality of Communication in your unit among the following?")) %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ glue("% Percentage of RNs who rated communication as Good or Excellent")) 
+
+```
+
+### Quality of Communication and Intention to leave
+
+There is a statistically significant association between Intention to leave and quality of Communication as rated by the RNs.
+
+Those RNs who have plans to leave within the next 12 months or 3 years, give a lower 
+rating on average for the quality of collaboration between Nurses, between nurses and physicianσ, between Nurses and nursing managers and between nurses and the hospital administration.
 
 ```{r}
 # vars_communication, vars_collaboration do a reverse coding, so higher means better 
 
-tbl <- 
 dta %>% 
   filter(section == "Section C") %>% 
   transmute(
@@ -83,8 +157,10 @@ dta %>%
 
 ### Quality of Collaboration and Intention to leave
 
-Some text here....    
+There is a statistically significant association between Intention to leave and quality of collaboration as rated by the RNs.
 
+Those RNs who have plans to leave within the next 12 months or 3 years, give a lower 
+rating on average for the quality of collaboration between Nurses, between nurses and physician, between Nurses and nursing managers and between nurses and the hospital administration.
 
 
 ```{r}
@@ -112,16 +188,17 @@ dta %>%
     modify_caption(
     glue(
       "Intention to leave Vs\n
-    How would you rate the quality of Collaboration in your unit among the following?"))
-
-
+    How would you rate the quality of Collaboration in your unit among the following?")
+    )
 ```
 
 
 ### Respect and Intention to leave
 
-Some text here....    
+There is a statistically significant association between Intention to leave and the perceived respect for nurses.
 
+Those RNs who have plans to leave within the next 12 months or 3 years, give a lower 
+rating on average for the respect by Other nurses, Physicians, Other Health Care colleagues, Unit managers and Hospital administration.    
 
 
 ```{r}
@@ -157,7 +234,10 @@ dta %>%
 ### Intention to leave Vs Perceptions of work environments
 
 
-Some text here ....
+Those RNs who have plans to leave within the next 12 months or 3 years, give a lower 
+rating on average when describing the quality of care for patients in their unit, compared to the RNs that have no plans to leave within the next 3 years.
+
+They also tend to agree less (on a scale of 1 (Strongly Disagree) to 4 (Strongly Agree) that they are "recongnised for the value they bring to their work environment", and that their "Organisation values their health and safety". Lastly, they indicated that they experience more frequently n average, moral distress compared to the RNs that have no plans to leave within the next 3 years.
 
 
 ```{r}
@@ -177,7 +257,7 @@ dta %>%
     type = list( c(quality_care, hwes_12_unit, value_health_safety,moral_distress) ~ "continuous"),
     missing = "no"
   ) %>% 
-  modify_header(label = "**Respect by**") %>% 
+  modify_header(label = "**Work Environment**") %>% 
   modify_caption(
     glue(
       "Intention to leave Vs\n
@@ -199,7 +279,17 @@ dta %>%
 
 - AACN Standards with respect to the Organisation
 
-Some text here
+The table below presents the Spearman correlation coefficient (r) for the linear associations between the six AACN standards, and the Wοrk Environment indicators.
+
+There are moderate and positive correlations between the AACN standards and the Communication environment (correlation ranging from 0.24 ~ 0.34 ), where "Communication between Nurses and Hospital Administration" having the highest correlation with the AACN standards (correlation r ranging from 0.42 ~ 0.54), indicating that higher communication is associated with increased AACN standards across all areas, not only for Skilled communication and True collaboration but also for Effective Decision making (r = 0.48), Appropriate staffing (r = 0.45), Meaningful recognition (r = 0.48) and Authentic Leadership (r = 0.54).
+
+A very similar level of positive correlation is shown for the Collaboration in the work environment and the six AACN standards.
+
+With respect to the moral distress level, there is a moderate and negative association with the six AACN standards, where lower moral distress is associated with higher level of Skilled Communication (r= -0.22), True Collaboration (r=-0.22), Effective Decision-Making (r = -0.19), Appropriate Staffing (r = -0.14), Meaningful Recognition (r = -0.2) and Authentic Leadership (r = -0.23).
+
+Moreover, satisfaction with being a Registered Nurse and satisfaction with the current job, have a low and positive association  with the six AACN standards.
+
+The level of respect they feel is moderately and positively associated with the six AACN standards, indicating that the higher the level of respect the RNs feel, is associated with higher AACN standards across all areas of the AACN.
 
 ```{r}
 
@@ -212,6 +302,7 @@ dta %>%
   set_variable_labels(
     staffing_right = "Appropriate staffing in the unit(more than 75% of time or all of the time)"
   ) %>% 
+  set_variable_labels(.labels = new_respect_labs) %>% 
   tbl_cross_correlation(
     .colsx = 
       c( 
@@ -219,15 +310,15 @@ dta %>%
         all_of(vars_collaboration),
         moral_distress,
         quality_care,
-        # job satisfaction
-        staffing_right,
+        # staffing_right,
+        
         satisfied_nurse,
         satisfied_overall,
         all_of(vars_respect_by)
       ),
     .colsy = all_of(dim__scales_org)
   ) %>% 
-  rename(" " = colsx) %>% 
+  rename("Work Environment" = colsx) %>% 
   flextable() %>% 
   flextable::add_header_row( 
     values = c("", "AACN Standards (Organisation level)"), 
@@ -251,7 +342,9 @@ dta %>%
 
 - AACN Standards with respect to the Unit
 
-Some text here
+A similar association is observed as in the AACN standards in the Organisation.    
+
+
 
 ```{r}
 
@@ -263,6 +356,7 @@ dta %>%
   set_variable_labels(
     staffing_right = "Appropriate staffing in the unit(more than 75% of time or all of the time)"
   ) %>% 
+  set_variable_labels(.labels = new_respect_labs) %>% 
   tbl_cross_correlation(
     .colsx = 
       c( 
@@ -270,8 +364,8 @@ dta %>%
         all_of(vars_collaboration),
         moral_distress,
         quality_care,
-        # job satisfaction
-        staffing_right,
+        #staffing_right,
+        
         satisfied_nurse,
         satisfied_overall,
         all_of(vars_respect_by)
@@ -305,7 +399,10 @@ dta %>%
 
 ### Association of Respect and HWE implemtation level
 
-Some text here....    
+
+There is a statistically significant association between the perceive level of respect for RNs and whether their organisation has implemented Healty Work Environment standards. (p<0.001).
+
+RNs who stated that their organisation has Fully Implemented some Healthy Work Environment standards, rate higher on average, the respect by Other nurses, by Physicians, by Other health care colleagues, by unit nursing managers, and by the hospital administration, compared to the the RNs who stated that their organisation has not all implemented any HWE standards.
 
 
 ```{r}
@@ -326,7 +423,7 @@ dta %>%
     type = everything()~ "continuous"
   ) %>% 
   add_p() %>% 
-  modify_header(label = "Respect by") %>% 
+  modify_header(label = "-Respect by-") %>% 
   modify_caption(
     "Correlations between implementation of AACN HWE standards and 
     Respect satisfaction levels") %>% 
@@ -344,7 +441,6 @@ dta %>%
 
 ### Relationship betwen __Respect__ and Job satisfaction, Communication, Collaboration, Moral DIstress and Intention to leave    
 
-Some text here....    
 
 
 ```{r}
@@ -370,7 +466,7 @@ dta %>%
     ),
     all_of(vars_respect_by)
   ) %>% 
-  rename(" " = colsx) %>% 
+  rename(" Work Environment " = colsx) %>% 
   flextable() %>% 
   flextable::add_header_row(
     values = c("", 
