@@ -1,0 +1,192 @@
+---
+title: "reliability"
+author: "Lefkios Paikousis"
+date: "14/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r include=FALSE}
+# Libraries ---------------------------------------------------------------
+
+library(gtsummary)
+library(haven)
+library(labelled)
+library(flextable)
+library(glue)
+library(tidyverse)
+
+# Setup -------------------------------------------------------------------
+
+source("00-variable_info.R", local = TRUE)
+source("00-helper_functions.R", local = TRUE)
+
+gtsummary::set_gtsummary_theme(theme_gtsummary)
+
+flextable::set_flextable_defaults(
+  table.layout = "autofit"
+)
+
+dta <- readRDS("data/dta_retest.rds")
+
+var_label(dta) %>% keep(is.null)
+#dta <- readRDS("data/raw_cleaned.rds")
+labels <- labelled::var_label(dta)
+
+# in case Respect by variables are shown independently
+new_respect_labs <- labels[vars_respect_by] %>%  map(~ paste0("Respect by:", .))
+
+new_vars_hwes_labs <- labels[vars_hwes_org] 
+names(new_vars_hwes_labs) <- str_remove(names(new_vars_hwes_labs), "_org")
+
+```
+
+
+
+```{r process, include=FALSE}
+
+dta %>% count(id_comb, id, test,sort= T)
+
+dta_split <- 
+  dta %>% 
+  arrange(id_comb,test) %>% 
+  #select(id_comb,test, all_of(vars_collaboration)) %>% 
+  split(.$test)
+
+
+test_retest <- function(vars_vector){
+  
+  cor(
+    x = dta_split$test[vars_vector],
+    y = dta_split$retest[vars_vector], 
+    use = "pairwise.complete.obs",
+    method = "spearman") %>% 
+    diag() %>% 
+    enframe() %>% 
+    transmute(
+      var = name,
+      r  = round(value, 2)
+    )
+  
+}
+
+
+# check
+test_retest(vars_communication)
+
+
+```
+
+
+## Test - Retest reliability
+
+
+### Section B (HWE)
+
+The test retest reliability of the HWE items was tested in all 16 items - for both _in your Organisation_ and _In your unit_, with the Spearman correlation coefficient.    
+
+
+```{r echo=FALSE}
+org <- test_retest(vars_hwes_org) 
+unit <- test_retest(vars_hwes_unit)
+
+bind_rows(org, unit) %>% 
+  extract(var, c("var", "type"),"(.+\\d)_(org|unit)") %>% 
+  mutate(var = fct_inorder(var)) %>% 
+  spread(type, r) %>% 
+  mutate(var = recode(var, !!!unlist(new_vars_hwes_labs))) %>% 
+  rename("HWE item" = var, "Organisation" = org, "Unit" = unit) %>% 
+  flextable() %>% 
+  add_header_row(values = c("", "In your"), colwidths = c(1, 2)) %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) in the HWE items")
+
+```
+
+### Section C
+
+- Communication
+
+```{r }
+# bind_rows(
+#   Collaboaration = test_retest(vars_collaboration),
+#   Communication = test_retest(vars_communication),
+#   .id = "type"
+# ) %>% 
+test_retest(vars_communication) %>% 
+  mutate(var = recode(var, !!!unlist(labels))) %>% 
+  rename("How would you rate the quality of communication in your unit among the following?" = var) %>% 
+  flextable() %>% 
+  merge_v(j = 1) %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) in the Communication items")
+
+```
+
+- Collaboration
+
+```{r }
+test_retest(vars_collaboration) %>% 
+  mutate(var = recode(var, !!!unlist(labels))) %>% 
+  rename("How would you rate the quality of collaboration in your unit among the following?" = var) %>% 
+  flextable() %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) in the Collaboration items")
+
+
+```
+
+
+- Respect by
+
+```{r }
+test_retest(vars_respect_by) %>% 
+  mutate(var = recode(var, !!!unlist(labels))) %>% 
+  rename("In your unit how would you rate the respect for nurses by each of the following?" = var) %>% 
+  flextable() %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) in the perceived respect items")
+
+```
+
+
+- Rate Manager skills
+
+```{r }
+test_retest(vars_skills_manager) %>% 
+  mutate(var = recode(var, !!!unlist(labels))) %>% 
+  rename("Please rate the skill of your unit Nursing managers in the following areas" = var) %>% 
+  flextable() %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) for the Manager SKills rating items")
+
+```
+
+- Rate Manager skills
+
+```{r }
+test_retest(vars_skills_admin) %>% 
+  mutate(var = recode(var, !!!unlist(labels))) %>% 
+  rename("Please rate the skill of your hospital nursing administrators in the following" = var) %>% 
+  flextable() %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) for the hospital nursing administrators' SKills rating items")
+
+```
+
+
+```{r}
+
+
+dta %>% 
+  arrange(id_comb,test) %>% 
+  select(test, all_of(c(vars_hwes_org, vars_hwes_unit))) 
+
+dta_split %>% 
+  map(~select(., all_of(c(vars_hwes_org, vars_hwes_unit)))) %>% 
+  writexl::write_xlsx("data/retest.xlsx")
+
+dta %>% 
+  select(vars_hwes_org, test) %>% 
+  count(test)
+
+
+```
+
