@@ -470,6 +470,75 @@ dta %>%
 
 
 
+# Locate Tests - Retests -----------------------------------------------------------------
+
+# Create an identification variable (id_part)
+dta <- dta %>% 
+  mutate(across(starts_with("part"), str_trim)) %>% 
+  mutate(id_part = paste(part1, part2, part3, part4, sep = "-"),
+         id_part = tolower(id_part))
+
+# test retest mainly for Section B - the HWE scale. That is at 43% progress
+
+dta_compinations <- 
+  dta %>% 
+  filter(!is.na(part2)) %>% 
+  filter(progress>=43) %>% 
+  count(country, residence, id_part,  sort = TRUE) %>% 
+  # Not sure about the n > 2, so I keep only the instances with 2 concurrences
+  filter(n == 2) %>% 
+  # a better combination id using the resedence as well
+  mutate(id_comb = paste(country, residence, id_part, sep = ":")) 
+
+
+dta_compinations %>% count(country)
+
+
+# Now filter the data using this id_comb to get the response ids (id)
+dta_rt <-  dta %>% 
+  mutate(id_comb = paste(country, residence, id_part, sep = ":")) %>% 
+  filter(id_comb %in% dta_compinations$id_comb) %>% 
+  select(country, id, date, id_comb) %>% 
+  group_by(country, id_comb) %>% 
+  # same date repsonss hardly are retests
+  arrange(date, .by_group = TRUE) %>% 
+  mutate(same_date = as.Date(date) == lag(as.Date(date))) %>% 
+  fill(same_date, .direction = "up") %>% 
+  filter(!same_date) %>% 
+  mutate(test = c("test", "retest")) %>% 
+  ungroup()
+
+# How many retest is each country
+dta_rt %>% 
+  filter(test == "retest") %>% 
+  count(country)
+
+
+retest_ids <- dta_rt %>% 
+  filter(test == "retest") %>% 
+  pull(id)
+
+test_ids <- dta_rt %>% 
+  filter(test == "test") %>% 
+  pull(id)
+
+
+dta_retest <- 
+  dta %>% 
+  filter(id %in% dta_rt$id) %>% 
+  left_join(
+    dta_rt[c("id", "id_comb", "test")]
+    , by= "id"
+  )
+
+var_label(dta_retest) <- labels
+# remove the retests for the main dataset
+dta <-  filter(dta, !id %in% retest_ids)
+
+var_label(dta) %>% keep(is.null)
+
+
+
 # Create AACN Dimensions ----------------------------------------------------
 
 dta <- 
@@ -502,10 +571,9 @@ var_label(dta) <- labels
 
 # Do all have labels?
 var_label(dta) %>% keep(is.null)
-
-
+var_label(dta_retest) %>% keep(is.null)
 
 # Save as RDS file
 
 saveRDS(dta, "data/raw_cleaned.rds")
-
+saveRDS(dta_retest, "data/dta_retest.rds")

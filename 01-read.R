@@ -48,7 +48,8 @@ var_label(dta) <- lapply(var_label(dta), str_squish)
 
 dta <- filter(dta, 
               RecordedDate > as.Date("2020-12-29"),
-              language != "EN"
+              language != "EN",
+              Status != 1 # Preview response, not an actual response
 )
 
 dta %>% count(language)
@@ -130,70 +131,18 @@ dta <- dta %>% select(-any_of(cols_remove))
 # Where he fuck did this come from?
 
 dta <- dta %>% 
-  filter(!id %in% c("R_2rHOqIPcoC6EFTU"))
-
-
-
-
-# Locate Tests - Retests -----------------------------------------------------------------
-
-# Create an identification variable (id_part)
-dta <- dta %>% 
-  mutate(across(starts_with("part"), str_trim)) %>% 
-  mutate(id_part = paste(part1, part2, part3, part4, sep = "-"),
-         id_part = tolower(id_part))
-
-# test retest mainly for Section B - the HWE scale. That is at 43% progress
-
-dta_compinations <- 
-  dta %>% 
-  filter(!is.na(part2)) %>% 
-  filter(progress>=43) %>% 
-  count(country, residence, id_part,  sort = TRUE) %>% 
-  # Not sure about the n > 2, so I keep only the instances with 2 concurrences
-  filter(n == 2) %>% 
-  # a better combination id using the resedence as well
-  mutate(id_comb = paste(country, residence, id_part, sep = ":")) 
-
-
-dta_compinations %>% count(country)
-
-
-# Now filter the data using this id_comb to get the response ids (id)
-dta_retests <-  dta %>% 
-  mutate(id_comb = paste(country, residence, id_part, sep = ":")) %>% 
-  filter(id_comb %in% dta_compinations$id_comb) %>% 
-  select(country, id, date, id_comb) %>% 
-  group_by(country, id_comb) %>% 
-  # same date repsonss hardly are retests
-  arrange(date, .by_group = TRUE) %>% 
-  mutate(same_date = as.Date(date) == lag(as.Date(date))) %>% 
-  fill(same_date, .direction = "up") %>% 
-  filter(!same_date) %>% 
-  mutate(test = c("test", "retest")) %>% 
-  ungroup()
-
-# How many retest is each country
-dta_retests %>% 
-  filter(test == "retest") %>% 
-  count(country)
-
-
-retest_ids <- dta_retests %>% 
-  filter(test == "retest") %>% 
-  pull(id)
-
-test_ids <- dta_retests %>% 
-  filter(test == "test") %>% 
-  pull(id)
-
-
-dta <-  filter(dta, !id %in% retest_ids)
+  filter(!id %in% c("R_2rHOqIPcoC6EFTU", 
+                    "R_RVxixGVSb4O8j8l" # this is a test form SPAIN
+                     
+                    )
+         )
 
 var_label(dta) %>% keep(is.null)
+
+
 
 # Save as RDS file
 
 saveRDS(dta, "data/raw_processed.rds")
 
-saveRDS(dta_retests, "data/dta_retests.rds")
+#saveRDS(dta_retest, "data/dta_retest.rds")
