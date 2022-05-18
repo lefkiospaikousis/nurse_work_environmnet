@@ -1,7 +1,7 @@
 ---
-title: "reliability"
+title: "Reliability analysis - AACN survey"
 author: "Lefkios Paikousis"
-date: "14/05/2022"
+date: "`r format(Sys.time(), '%B, %Y')`"
 output: html_document
 ---
 
