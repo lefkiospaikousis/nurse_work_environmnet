@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 ```{r include=FALSE}
@@ -33,7 +33,7 @@ flextable::set_flextable_defaults(
 dta <- readRDS("data/dta_retest.rds")
 
 var_label(dta) %>% keep(is.null)
-#dta <- readRDS("data/raw_cleaned.rds")
+
 labels <- labelled::var_label(dta)
 
 # in case Respect by variables are shown independently
@@ -82,6 +82,26 @@ test_retest(vars_communication)
 
 
 ## Test - Retest reliability
+
+### Section A
+
+```{r}
+
+vars_sectionA <- c(
+  c("satisfied_nurse", "advice_nurse", "quality_care")
+  
+  #"aware_hwes", "implement_hwes_unit", "implement_hwes_org")
+)
+
+
+test_retest(vars_sectionA) %>% 
+  mutate(var = recode(var, !!!unlist(labels))) %>% 
+  rename("How would you rate the quality of communication in your unit among the following?" = var) %>% 
+  flextable() %>% 
+  set_caption("Test-retest reliability (correlation coeffcient r) in the Communication items")
+
+
+```
 
 
 ### Section B (HWE)
@@ -172,20 +192,104 @@ test_retest(vars_skills_admin) %>%
 ```
 
 
+## Internal Consistency
+
+
+```{r include=FALSE}
+
+
+cronbach <- function(.data, .vars){
+  
+  
+  stopifnot(inherits(.data, "data.frame"))
+  #stopifnot(length(.digits)==1 | is.integer(.digits))
+  
+  exprX <- rlang::enquo(.vars)
+  
+  posX <- tidyselect::eval_select(exprX, data = .data)
+  
+  
+  if (length(posX) == 0) {
+    rlang::abort(glue::glue("`.vars` must select at least one column."))
+  }
+  
+  # this also renames of you pas smthng like .vars = c(New_name = old_name)
+  dta <- rlang::set_names(.data[posX], names(posX))
+  
+  n_items <- length(posX)
+  
+  alpha <- dta %>% 
+    psych::alpha() %>% .$total %>% .$std.alpha
+  
+  tibble(
+    n = n_items,
+    alpha = alpha
+    
+  )
+}
+ 
+cronbach(dta, all_of(vars_hwes_org))
+
+
+
+```
+
+
+
+
 ```{r}
 
+dta_test <- dta %>% filter(test == "test")
 
-dta %>% 
-  arrange(id_comb,test) %>% 
-  select(test, all_of(c(vars_hwes_org, vars_hwes_unit))) 
+list_of_alphas <- 
+  list(
+    org   = cronbach(dta_test, vars_hwes_org),
+    unit  = cronbach(dta_test, vars_hwes_unit),
+    comm  = cronbach(dta_test, vars_communication),
+    coll  = cronbach(dta_test, vars_collaboration),
+    resp  = cronbach(dta_test, vars_respect_by),
+    mskil = cronbach(dta_test, vars_skills_manager),
+    askil = cronbach(dta_test, vars_skills_admin)
+    
+  ) 
 
-dta_split %>% 
-  map(~select(., all_of(c(vars_hwes_org, vars_hwes_unit)))) %>% 
-  writexl::write_xlsx("data/retest.xlsx")
 
-dta %>% 
-  select(vars_hwes_org, test) %>% 
-  count(test)
+list_of_alphas %>% 
+  bind_rows(.id = "group") %>% 
+  mutate(alpha = round(alpha, 2)) %>% 
+  mutate(
+    group = fct_recode(group, 
+                       "Healthy Work Environmnet - Organisation" = 'org',
+                       "Healthy Work Environmnet - Unit" = 'unit',
+                       "Quality of communication in your unit" = 'comm',
+                       "Quality of collaboration in your unit" = 'coll',
+                       "In your unit how would you rate the respect for nurses " = 'resp',
+                       "Skills of your unit Nursing managers" = 'mskil',
+                       "Skills of your hospital nursing administrator" = 'askil'
+                       
+    )
+  ) %>% 
+  rename(
+    "Group of items" = group,
+    "N (Items)" = n,
+    "Cronbach's alpha" = alpha
+  ) %>% 
+  flextable() %>% 
+  set_caption("Internal Consistency (Cronbach's alpha) for the items in the AACN survey")
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+
+df <- cbind(dta_split$test$hwes_10_org, dta_split$retest$hwes_10_org)
+res <- psych::ICC(df)
+
+res$results[res$results$type == "ICC3", "ICC"]
+
+cor(df)
+
+irr::icc(df, type = "agreement")
 
 
 ```
