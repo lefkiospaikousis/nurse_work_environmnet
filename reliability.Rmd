@@ -2,7 +2,9 @@
 title: "Reliability analysis - AACN survey"
 author: "Lefkios Paikousis"
 date: "`r format(Sys.time(), '%B, %Y')`"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -74,6 +76,30 @@ test_retest <- function(vars_vector){
 }
 
 
+icc_var <- function(var){
+  
+obj <- 
+  map_dfr(dta_split, ~select(., !!!var) %>% pull) %>% 
+  as.matrix() %>% 
+  psych::ICC(lmer = TRUE)
+
+obj$results[3,]$ICC %>% setNames(var)
+
+}
+
+icc_var("collab_nurses")
+
+
+test_retest <- function(vars){
+  
+  vars %>% 
+  set_names() %>% 
+  map_dbl(icc_var) %>% 
+  tibble::enframe("var", "icc") %>% 
+  mutate(icc = round(icc,2))
+  
+}
+
 # check
 test_retest(vars_communication)
 
@@ -83,7 +109,22 @@ test_retest(vars_communication)
 
 ## Test - Retest reliability
 
+We estimated the test-retest reliability using the Intra-Class Correlation coefficient (ICC).  
+The type of ICC used is the __Two-Way mixed effects, consistency, single rater/measurement__ as defined by _[Shrout & Fleiss (1979)]_ convention. ICC values less than 0.5, between 0.5 and 0.75, between 0.75 and 0.9, and greater than 0.90 are indicative of poor, moderate, good, and excellent reliability, respectively __(Koo TK, Li MY.2016)__.   
+
+
+The ICC is estimated for the items in Section A, Section B (HWE scale) and for a range of items in Section C namely the __Collaboration/ Communication__ items, the __perceived respect__ for nurse, and the ratings of __manager skills__.  
+
+
+Ref:: [Koo TK, Li MY. A Guideline of Selecting and Reporting Intraclass Correlation Coefficients for Reliability Research [published correction appears in J Chiropr Med. 2017 Dec;16(4):346]. J Chiropr Med. 2016;15(2):155-163. doi:10.1016/j.jcm.2016.02.012]
+
+
 ### Section A
+
+
+There is moderate to good reliability (ICC: 0.76 ~ 0.82) in the items of Section A.    
+
+<br>
 
 ```{r}
 
@@ -98,7 +139,7 @@ test_retest(vars_sectionA) %>%
   mutate(var = recode(var, !!!unlist(labels))) %>% 
   rename("How would you rate the quality of communication in your unit among the following?" = var) %>% 
   flextable() %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) in the Communication items")
+  set_caption("Test-retest reliability in the Communication items")
 
 
 ```
@@ -106,7 +147,11 @@ test_retest(vars_sectionA) %>%
 
 ### Section B (HWE)
 
-The test retest reliability of the HWE items was tested in all 16 items - for both _in your Organisation_ and _In your unit_, with the Spearman correlation coefficient.    
+The test retest reliability of the HWE items was tested in all 16 items - for both _in your Organisation_ and _In your unit_.
+
+
+There is moderate to good reliability (ICC: 0.71 ~ 0.82) in the items of the HWE scale.    
+<br>
 
 
 ```{r echo=FALSE}
@@ -116,18 +161,23 @@ unit <- test_retest(vars_hwes_unit)
 bind_rows(org, unit) %>% 
   extract(var, c("var", "type"),"(.+\\d)_(org|unit)") %>% 
   mutate(var = fct_inorder(var)) %>% 
-  spread(type, r) %>% 
+  spread(type, icc) %>% 
   mutate(var = recode(var, !!!unlist(new_vars_hwes_labs))) %>% 
   rename("HWE item" = var, "Organisation" = org, "Unit" = unit) %>% 
   flextable() %>% 
   add_header_row(values = c("", "In your"), colwidths = c(1, 2)) %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) in the HWE items")
+  add_footer_lines("Table shows ICC coefficient") %>% 
+  set_caption("Test-retest reliability in the HWE items")
 
 ```
 
 ### Section C
 
 - Communication
+
+There is moderate reliability (ICC: 0.71 ~ 0.78) in the Communication scale.  
+
+<br>
 
 ```{r }
 # bind_rows(
@@ -140,59 +190,84 @@ test_retest(vars_communication) %>%
   rename("How would you rate the quality of communication in your unit among the following?" = var) %>% 
   flextable() %>% 
   merge_v(j = 1) %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) in the Communication items")
+  set_caption("Test-retest reliability in the Communication items")
 
 ```
 
+
+<br>
+
 - Collaboration
+
+There is moderate to good reliability (ICC: 0.71 ~ 0.82) in the Collaboration items.   
+
 
 ```{r }
 test_retest(vars_collaboration) %>% 
   mutate(var = recode(var, !!!unlist(labels))) %>% 
   rename("How would you rate the quality of collaboration in your unit among the following?" = var) %>% 
   flextable() %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) in the Collaboration items")
+  set_caption("Test-retest reliability in the Collaboration items")
 
 
 ```
 
+<br>
 
 - Respect by
+
+There is moderate reliability (ICC: 0.72 ~ 0.78) in the perceived respect items.   
+
 
 ```{r }
 test_retest(vars_respect_by) %>% 
   mutate(var = recode(var, !!!unlist(labels))) %>% 
   rename("In your unit how would you rate the respect for nurses by each of the following?" = var) %>% 
   flextable() %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) in the perceived respect items")
+  set_caption("Test-retest reliability in the perceived respect items")
 
 ```
 
 
+<br>
+
 - Rate Manager skills
+
+There is moderate (ICC: 0.70 ~ 0.76) in the Manager's skills items.   
+
 
 ```{r }
 test_retest(vars_skills_manager) %>% 
   mutate(var = recode(var, !!!unlist(labels))) %>% 
   rename("Please rate the skill of your unit Nursing managers in the following areas" = var) %>% 
   flextable() %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) for the Manager SKills rating items")
+  set_caption("Test-retest reliability for the Manager SKills rating items")
 
 ```
 
-- Rate Manager skills
+<br>
+
+- Rate Hospital Administration skills
+
+There is moderate (ICC: 0.66 ~ 0.77) in the Hospital Administration's skills items.   
 
 ```{r }
 test_retest(vars_skills_admin) %>% 
   mutate(var = recode(var, !!!unlist(labels))) %>% 
   rename("Please rate the skill of your hospital nursing administrators in the following" = var) %>% 
   flextable() %>% 
-  set_caption("Test-retest reliability (correlation coeffcient r) for the hospital nursing administrators' SKills rating items")
+  set_caption("Test-retest reliability for the hospital nursing administrators' Skills rating items")
 
 ```
 
 
 ## Internal Consistency
+
+Internal consistency was evaluated using the Cronbach's alpha index. The alpha index was calculated for the rating items in Section B (HWE scale) and the Section C's items for the __Collaboration/ Communication__ items, the __perceived respect__ for nurse, and the ratings of __manager skills__.   
+
+There is good to excellent internal consistency in all groups of items (alpha range: 0.78 ~ 0.97)
+
+<br>
 
 
 ```{r include=FALSE}
@@ -219,7 +294,7 @@ cronbach <- function(.data, .vars){
   n_items <- length(posX)
   
   alpha <- dta %>% 
-    psych::alpha() %>% .$total %>% .$std.alpha
+    psych::alpha(check.keys=FALSE) %>% .$total %>% .$std.alpha
   
   tibble(
     n = n_items,
@@ -228,7 +303,7 @@ cronbach <- function(.data, .vars){
   )
 }
  
-cronbach(dta, all_of(vars_hwes_org))
+cronbach(dta, all_of(vars_sectionA))
 
 
 
@@ -279,18 +354,4 @@ list_of_alphas %>%
 
 ```
 
-
-```{r eval=FALSE, include=FALSE}
-
-df <- cbind(dta_split$test$hwes_10_org, dta_split$retest$hwes_10_org)
-res <- psych::ICC(df)
-
-res$results[res$results$type == "ICC3", "ICC"]
-
-cor(df)
-
-irr::icc(df, type = "agreement")
-
-
-```
 
