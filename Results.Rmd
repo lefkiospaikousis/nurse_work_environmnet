@@ -39,10 +39,9 @@ labels <- labelled::var_label(dta)
 ```
 
 
-\newpage
 ## Demographics
 
-One thousand, four hundred and thirteen (1,413) RNs participated in this study from 5 countries (Cyprus: n=264, Spain: n=437, Croatia: n=290, Poland: n=105, and Romania: n=317). With respect to their gender, 15% identified as Male, 52% as Female, and 33.3% preferred not to answer. Their mean age was 37.4 years (SD = 10.1). 
+`r xfun::numbers_to_words(nrow(dta), cap = TRUE,and = TRUE)` (`r nrow(dta)`) RNs participated in this study from 5 countries (Cyprus: n=264, Spain: n=435, Croatia: n=290, Poland: n=105, and Romania: n=317). With respect to their gender, 15% identified as Male, 52% as Female, and 33.3% preferred not to answer or didn;t provide a response. Their mean age was 37.3 years (SD = 9.9). 
 
 
 ```{r demographics}
@@ -72,38 +71,58 @@ dta %>%
 
 ### Job satisfaction as an RN
 
+Overall, 56% of the respondents are very satisfied with being a registered nurse. The highest on average satisfaction [on the scale 1 to 4] is observed in Spain [3.6 (SD=0.8)] and the lowest in Croatia [3.1 (SD=0.7)]
+
+<br>
 
 ```{r job_satisfaction}
 
 dta %>% 
   transmute(
     country,
-    satisfied_nurse = as_factor(satisfied_nurse)
+    satisfied_nurse = as_factor(satisfied_nurse),
+    sat_nurse = 5 - as.numeric(satisfied_nurse)
   ) %>%
-  tbl_summary(by = country) %>% 
+  set_variable_labels("sat_nurse" = "Mean satisfaction (SD)") %>% 
+  tbl_summary(by = country,
+              type = list(sat_nurse~"continuous")
+  ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
-  modify_caption(labels$satisfied_nurse)
+  modify_caption(labels$satisfied_nurse) %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "n (%); Mean (SD) 
+    Mean rating (SD): Mean of scores ranging from 1 (Very dissatisfied) to 4 (Very satisfied)") 
 
 ```
 
 
 ### Advice a qualified individual to pursue a career in Nursing
 
+Overall, 75% of the respondents definitely would, or probably would advice a qualified individual to pursue a career in Nursing. Romania is most likely (on average, on the scale 1 to 4) to advice in this direction [3.2 (SD = 0.7)].
+
+<br>
 
 ```{r advice_nurse}
 
 dta %>% 
   transmute(
     country,
-    advice_nurse = as_factor(advice_nurse)
+    advice_nurse = as_factor(advice_nurse),
+    adv_nurse = 5 - as.numeric(advice_nurse)
   ) %>%
-  tbl_summary(by = country) %>% 
+  set_variable_labels("adv_nurse" = "Mean likelihood (SD)") %>% 
+  tbl_summary(by = country,
+              type = list(adv_nurse~"continuous")
+  ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
-  modify_caption(labels$advice_nurse)
+  modify_caption(labels$advice_nurse) %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "n (%); Mean (SD) 
+    Mean rating (SD): Mean of scores ranging from 1 (Definitely would not) to 4 (Definitely would)") 
 
 ```
 
@@ -111,19 +130,30 @@ dta %>%
 
 ### Quality of care for patients in your unit
 
+Overall, 81% of the respondents would you describe the quality of care for patients in their unit as Excellent or Good. Respondents from Romania have a higher score in the rating on average (on the scale 1 to 4)  - [3.2 (SD = 0.8)] and Poland the lowest [2.9 (SD=0.7)]
+
+<br>
 
 ```{r quality_of_care}
 
 dta %>% 
   transmute(
     country,
-    quality_care = as_factor(quality_care)
+    quality_care = as_factor(quality_care),
+    qual_care = 5 - as.numeric(quality_care)
   ) %>%
-  tbl_summary(by = country) %>% 
+  droplevels() %>% 
+  set_variable_labels("qual_care" = "Mean rating (SD)", .labels = labels["quality_care"]) %>% 
+  tbl_summary(by = country,
+              type = list(qual_care~"continuous")
+  ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
-  modify_caption(labels$quality_care)
+  modify_caption(labels$quality_care) %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "n (%); Mean (SD) 
+    Mean rating (SD): Mean of scores ranging from 1 (Poor) to 4 (Excellent)") 
 
 ```
 
@@ -131,7 +161,7 @@ dta %>%
 ### Are you aware of any Healthy Work Environment Standards in ICU?
 
 
-Fifty-three percent (53%) stated they are aware of some Healthy Work Environment Standards in ICU. There were statistically significant differences (p<0.001) across the countries, with Spain having the lowest proportion of awareness (Cyprus:68%, Spain:27%, Croatia:65%, Poland:69%, Romania:62%)
+Fifty-three percent (53%) stated they are aware of some Healthy Work Environment Standards in ICU. There were statistically significant differences (p<0.001) across the countries, with Spain having the lowest proportion of awareness and Poland the highest (Cyprus:68%, Spain:27%, Croatia:65%, Poland:69%, Romania:62%)
 
 
 ```{r awareness_hwe}
@@ -152,14 +182,14 @@ dta %>%
 
 ### Implementation of HWE standards
 
-Twenty-five percent (25.2%) stated that their UNIT is well on its way or has fully implemented some Healthy Work Environment Standards. There were statistically significant differences (p<0.001) across the countries, with Romania having the highest proportion (55%) of “Well on their way” or Full implementation”, and Spain and Poland having the lowest [Cyprus:30.9%, Spain:8.5%, Croatia:16.1%, Poland:10.5%, and Romania:55%]. An overall 31% are not aware if any standards have been implemented.    
+Twenty-five percent (25.2%) stated that their _UNIT_ is well on its way or has fully implemented some Healthy Work Environment Standards. There were statistically significant differences (p<0.001) across the countries, with Romania having the highest proportion (55%) of “Well on their way” or Full implementation”, and Spain and Poland having the lowest [Cyprus:30.9%, Spain:8.5%, Croatia:16.1%, Poland:10.5%, and Romania:55%]. An overall 31% are not aware if any standards have been implemented.    
 
-Similarly, 24.2% stated that their ORGANISATION is well on its way or has fully implemented some Healthy Work Environment Standards. There were statistically significant differences (p<0.001) across the countries, with Romania having the highest proportion (53%) of “Well on their way” or Full implementation”, and Spain and Poland having the lowest [Cyprus:27.6%, Spain:6.4%, Croatia:17.4%, Poland:11.5%, and Romania:53%]. An overall 36% are not aware if any standards have been implemented.    
+Similarly, 24.2% stated that their _ORGANISATION_ is well on its way or has fully implemented some Healthy Work Environment Standards. There were statistically significant differences (p<0.001) across the countries, with Romania having the highest proportion (53%) of “Well on their way” or Full implementation”, and Spain and Poland having the lowest [Cyprus:27.5%, Spain:6.4%, Croatia:17.4%, Poland:11.5%, and Romania:53%]. An overall 36% are not aware if any standards have been implemented.    
 
 
 ```{r implementation_hwe}
 
-  dta %>% 
+dta %>% 
   select(country, implement_hwes_unit, implement_hwes_org) %>%
   mutate_all(as_factor) %>% 
   tbl_summary(by = country) %>% 
@@ -174,10 +204,9 @@ Similarly, 24.2% stated that their ORGANISATION is well on its way or has fully 
 
 
 
-
-
 ```{r satisfaction_numeric, eval=FALSE, include=FALSE}
 # Satisfaction as numeric
+# I dod it in every table above.
 dta %>% 
   select(country, satisfied_nurse:quality_care) %>%
   filter(quality_care != 99) %>% 
@@ -199,13 +228,21 @@ dta %>%
 \newpage
 ## Section B -------------------------------------------------------------
 
+```{r include=FALSE}
+n_secB <- dta %>% filter(section >= "Section B") %>% nrow()
+
+```
+
+`r xfun::n2w(n_secB, cap = TRUE, and = TRUE)` RNs (`r n_secB`) completed Section B (the HWE scale).   
+
+
 ### Dimensions ----
 
 - __AACN Standards - In your Unit__
 
-Overall, in the 5 countries, with respect to the AACN’s six essential standards, and in the RN’s Unit, the mean Skilled Communication level is 2.3 (SD = 0.7) on the scale of 1 to 4, True collaboration mean level is at 2.5 (SD=0.7), Effective Decision Making is at 2.4 (0.6), Appropriate staffing is at 2.5 (0.7), Meaningful recognition at 2.5 (0.7) and Authentic leadership is at 2.5 (0.7).  There were statistically significant differences across the five countries in all six standards.    
+Overall, with respect to the AACN’s six essential standards, and in the RN’s Unit, the mean [on the scale of 1 to 4] Skilled Communication level is 2.2 (SD = 0.7) , True collaboration mean level is at 2.4 (SD=0.7), Effective Decision Making is at 2.3 (0.6), Appropriate staffing is at 2.4 (0.7), Meaningful recognition at 2.4 (0.7) and Authentic leadership is at 2.4 (0.7).  There were statistically significant differences across the five countries in all six standards.    
 
-
+<br>
 
 ```{r dimensions_unit}
 
@@ -230,10 +267,14 @@ dta %>%
 
 ```
 
+<br>
+
 - __AACN items - Unit__
 
 
-Table below, shows the mean level of agreement [1: Strongly Disagree, 4:Strongly Agree] in the 16 AACN items with respect to the Unit
+Table below, shows the mean level of agreement [1: Strongly Disagree, 4:Strongly Agree] in the 16 AACN items with respect to the __Unit__.
+
+<br>
 
 ```{r items_unit}
 
@@ -251,16 +292,21 @@ dta %>%
   add_p() %>% 
   modify_header(label = "") %>% 
   modify_caption("HWE in your Unit: Mean (SD) level of agreement") %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
+  ) %>% 
   #as_flex_table() %>% 
   #flextable::save_as_docx(path = "HWE-Unit-Average_Agreement.docx") %>% 
   {.}
 
 ```
 
+<br>
 
 - __AACN Standards - In the Organisation__
 
-Overall, in the 5 countries, with respect to the AACN’s six essential standards, and in the RN’s Organisation, the mean Skilled Communication level is 2.3 (SD = 0.7) on the scale of 1 to 4, True collaboration mean level is at 2.5 (SD=0.7), Effective Decision Making is at 245 (0.6), Appropriate staffing is at 2.5 (0.7), Meaningful recognition at 2.5 (0.7) and Authentic leadership is at 2.5 (0.7).  There were statistically significant differences across the five countries in all six standards.    
+Overall, in the 5 countries, with respect to the AACN’s six essential standards, and in the RN’s Organisation, the mean Skilled Communication level is 2.3 (SD = 0.7) on the scale of 1 to 4, True collaboration mean level is at 2.5 (SD=0.7), Effective Decision Making is at 2.4 (0.6), Appropriate staffing is at 2.5 (0.7), Meaningful recognition at 2.5 (0.7) and Authentic leadership is at 2.5 (0.7).
+There were statistically significant differences across the five countries in all six standards.    
 
 
 ```{r dimensions_organisation}
@@ -279,17 +325,20 @@ dta %>%
   modify_footnote(
     update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
   ) %>% 
-  # as_flex_table() %>%  
-  # flextable::save_as_docx(path = "HWE-Organisation-Standards.docx") %>% 
   {.}
 
 
 ```
 
+<br>
+
 - __AACN items - Organisation__
 
 
-Table below, shows the mean level of agreement [1: Strongly Disagree, 4:Strongly Agree] in the 16 AACN items with respect to the Organisation
+Table below, shows the mean level of agreement [1: Strongly Disagree, 4:Strongly Agree] in the 16 AACN items with respect to the __Organisation__.
+
+<br>
+
 
 ```{r items_organisation}
 
@@ -307,8 +356,9 @@ dta %>%
   add_p() %>% 
   modify_header(label = "") %>% 
   modify_caption("HWE in your Organisation: Mean (SD) level of agreement") %>% 
-  #as_flex_table() %>% 
-  #flextable::save_as_docx(path = "HWE-Unit-Average_Agreement.docx") %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
+  ) %>% 
   {.}
 
 ```
@@ -381,8 +431,24 @@ dta %>%
 \newpage
 ## Section C ---------------------------------------------------------------
 
+```{r include=FALSE}
+n_secC <- dta %>% filter(section >= "Section C") %>% nrow()
+
+```
+
+`r xfun::n2w(n_secC, cap = TRUE, and = TRUE)` RNs (`r n_secC`) completed Section B (the HWE scale).   
+
 
 ### Communication 
+
+
+<br>
+
+- Distribution of responses
+
+The table shows the distribution of responses across the four communication items [Nurses, Physicians, Nursing managers, and Hospital administration].
+
+<br>
 
 
 ```{r communication}
@@ -402,7 +468,16 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Excellent, Good__
+<br>
+
+- Distribution of Combined Proportion - Excellent/Good
+
+The table shows the distribution of the combined response of Excellent/ Good across the four communication items [Nurses, Physicians, Nursing managers, and Hospital administration].
+
+Overall, 70% of the respondents rate the quality of communication between Nurses, as __Excellent or Good__, 51% the communication between Nurses and Physicians, 54% the communication between Nurses and Nursing managers, and 24% the communication between Nurses and Hospital administration. There are statistically significant differences across the 5 countries with respect to all the communication items (p<0.001)
+
+
+<br>
 
 ```{r communication_combined}
 dta %>% 
@@ -428,6 +503,13 @@ dta %>%
 
 ### Collaboration 
 
+<br>
+
+- Distribution of responses
+
+The table shows the distribution of responses across the four collaboration items [Nurses, Physicians, Nursing managers, and Hospital administration].
+
+<br>
 
 ```{r Collaboration}
 dta %>% 
@@ -446,7 +528,16 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Excellent, Good__
+<br>
+
+- Distribution of Combined Proportion - Excellent/Good
+
+The table shows the distribution of the combined response of Excellent/ Good across the four collaboration items [Nurses, Physicians, Nursing managers, and Hospital administration].
+
+Overall, 74% of the respondents rate the quality of collaboration between Nurses, as __Excellent or Good__, 57% the collaboration between Nurses and Physicians, 53% the collaboration between Nurses and Nursing managers, and 27% the collaboration between Nurses and Hospital administration. There are statistically significant differences across the 5 countries with respect to all the collaboration items (p<0.001)
+
+
+<br>
 
 ```{r Collaboration_combined}
 dta %>% 
@@ -472,6 +563,13 @@ dta %>%
 
 ### Respect for nurses 
 
+<br>
+
+- Distribution of responses
+
+The table shows the distribution of responses for the perceived responses from 'Other Nurses' , 'Physicians', 'Other Health Care colleagues', 'Unit Nursing Managers' and 'Hospital Administration'.
+
+<br>
 
 ```{r respect}
 dta %>% 
@@ -490,7 +588,16 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Excellent, Good__
+<br>
+
+- Distribution of Combined Proportion - Excellent/Good
+
+The table shows the distribution of the combined response of Excellent/ Good.
+
+Overall, 74% of the respondents rate the respect by Other Nurses as __Excellent or Good__, 56% by Physicians, 65% by Other health care colleagues, 65% by Unit nursing managers, and 33% by the Hospital administration. There are statistically significant differences across the 5 countries with respect to all the collaboration items (p<0.001)
+
+
+<br>
 
 ```{r respect_comnbined}
 dta %>% 
@@ -518,7 +625,13 @@ dta %>%
 
 __Moral distress has been defined as occurring when you know the appropriate action to take, but you are unable to act upon it and/or you act in a manner contrary to your personal and professional values, which undermines your integrity and authenticity.__
 
+<br>
+
 - "To what extent, in your work as a nurse do you experience moral distress?"
+
+The table shows the distribution of responses to the question "To what extent, in your work as a nurse do you experience moral distress?".
+
+<br>
 
 ```{r distress}
 dta %>% 
@@ -538,7 +651,14 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Very frequently, Frequently__
+- Distribution of Combined Proportion - Very Frequently/ Frequently
+
+The table shows the distribution of the combined response of Very Frequently/ Frequently.
+
+Overall, 36% of the respondents experience moral distress, Very Frequently or frequently. There are statistically significant differences across the 5 countries with respect to all the collaboration items (p<0.001)
+
+
+<br>
 
 ```{r distress_combined}
 dta %>% 
@@ -564,7 +684,14 @@ dta %>%
 
 ### Staffing for the unit
 
-__With regard to staffing for your unit how often do you have the right number of registered nurses with the right knowledge and skills?__
+
+<br>
+
+- __With regard to staffing for your unit how often do you have the right number of registered nurses with the right knowledge and skills?__
+
+Overall, 20.3% of the respondents indicate that more than 75% of the time or all of the time, the staffing in their unit has the right number of RNs. There are significant differences across the countries, where Poland has the highest proportion [40%] where the staffing is right 75% of the time or all the time, compared to Cyprus [12.3%] or Croatios [13.2%]
+
+<br>
 
 
 ```{r staffing}
@@ -587,7 +714,13 @@ dta %>%
 
 ### Skills of unit's nursing managers
 
-- __Please rate the skill of your unit Nursing managers in the following areas__
+<br>
+
+- Distribution of responses
+
+The table shows the distribution of responses for the question __Please rate the skill of your unit Nursing managers in the following areas__.
+
+<br>
 
 
 ```{r skills_managers}
@@ -607,10 +740,14 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Excellent, Good__
+<br>
+
+- Distribution of Combined Proportion - Excellent/Good
+
+<br>
 
 ```{r skills_managers_combined}
-dta %>% 
+obj <- dta %>% 
   filter(section == "Section C") %>% 
   transmute(
     across(all_of(vars_skills_manager), ~if_else(. <=2, 1, 0)),
@@ -628,13 +765,37 @@ dta %>%
     "Please rate the skill of your unit Nursing managers in the following areas\n
   Combined proportion of: Excellent/ Good")
 
+new_names <- labels[vars_skills_manager] %>% unlist() %>% unname()
+
+out_list <- map(vars_skills_manager %>% set_names(new_names), ~
+                  inline_text(obj, variable = ., column = "stat_0", pattern = "{p}%")
+)
+
+comment <- out_list %>% imap(~paste0(.y, "-", .x)) %>% unlist() %>% unname() %>% glue::glue_collapse(sep = ", ", last = " and ")
+
+```
+
+The table shows the distribution of the combined response of Excellent/ Good.
+
+Overall, the respondents rate the skills of the unit managers with __Excellent or Good__ as follows `r comment`.    
+There are statistrically significant differences across the countries.
+
+<br>
+
+```{r}
+obj
 ```
 
 
 ### Skills of unit's nursing administrators
 
-- __Please rate the skill of your unit Nursing administrators in the following areas__
+<br>
 
+- Distribution of responses
+
+The table shows the distribution of responses for the question __Please rate the skill of your unit Nursing administrators in the following areas__.
+
+<br>
 
 ```{r skills_admins}
 dta %>% 
@@ -653,10 +814,15 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Excellent, Good__
+
+<br>
+
+- Distribution of Combined Proportion - Excellent/Good
+
+<br>
 
 ```{r skills_admins_combined}
-dta %>% 
+obj <- dta %>% 
   filter(section == "Section C") %>% 
   transmute(
     across(all_of(vars_skills_admin), ~if_else(. <=2, 1, 0)),
@@ -674,22 +840,72 @@ dta %>%
     "Please rate the skill of your unit Nursing administrators in the following areas\n
   Combined proportion of: Excellent/ Good")
 
+new_names <- labels[vars_skills_admin] %>% unlist() %>% unname()
+
+out_list <- map(vars_skills_admin %>% set_names(new_names), ~
+                  inline_text(obj, variable = ., column = "stat_0", pattern = "{p}%")
+)
+
+comment <- out_list %>% imap(~paste0(.y, "-", .x)) %>% unlist() %>% unname() %>% glue::glue_collapse(sep = ", ", last = " and ")
+
+```
+
+<br>
+
+The table shows the distribution of the combined response of Excellent/ Good.
+
+Overall, the respondents rate the skills of the unit nursing administration with __Excellent or Good__ as follows `r comment`. 
+
+There are statistically significant differences across the countries.
+
+<br>
+
+```{r}
+obj
 ```
 
 
 ### Main factors that keep RNs working in their current organization
 
+<br>
+
 - __What are the main factors that keep you working in your current organization?__
+
+<br>
+
+The main factor indicated by the RNs is the 'Salary and Benefits'[45%] followed by 'People I work with' [41%]. Less impact is the 'Patients I care for' [26%] and 'Location'[18%].
+
+The __Salary and benefits__ is the main factor for Cyprus RNs [56%] and Croatia [64%].
+
+The __People I work with__ is the main factor for Spain [41%] and Romania [52%].
+
+<br>
+
 
 ```{r factors_keep_work}
 
-dta %>% 
+order <- dta %>% 
+  filter(section == "Section C") %>% 
   transmute(
-    across(all_of(vars_factors_keep_work), as.numeric),
+    across(all_of(vars_factors_keep_work), as.numeric)
+  ) %>% 
+  gather() %>% 
+  group_by(key) %>% 
+  summarise(value = mean(value)) %>% 
+  arrange(desc(value)) %>% pull(key)
+
+
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(all_of(order), country) %>% 
+  transmute(
+    across(all_of(order), as.numeric),
     country
   ) %>% 
   set_variable_labels(.labels = labels[vars_factors_keep_work]) %>% 
-  tbl_summary(by = country, missing = "no") %>% 
+  tbl_summary(by = country, missing = "no",
+              sort = list(everything() ~ "frequency")
+  ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
@@ -728,6 +944,7 @@ What are the main factors that keep you working in your current organization? - 
 
 __In the past year, in your work as a nurse, please indicate the number of times you personally experienced each of the following?__
 
+
 ```{r incidents, include=FALSE}
 
 n_completed <- dta %>% filter(section == "Section C") %>% nrow()
@@ -738,9 +955,13 @@ pct_abuse <- scales::percent(n_abuse / n_completed, accuracy = 0.1)
 
 ```
 
+<br>
+
 This question was answered by `r n_completed` RNs.  
 
 A total of `r n_abuse` (`r pct_abuse`) RNs reported at least 1 incident 
+
+<br>
 
 ```{r incident_any}
 
@@ -750,7 +971,7 @@ dta %>%
   tbl_summary(by = country) %>% 
   modify_header(label = "") %>% 
   add_overall() %>% 
-  modify_caption("Proportion of RNs reporting at least one incident of harassment")
+  modify_caption("Proportion of RNs reporting at least one incident of abuse in the past year")
 
 
 ```
@@ -758,8 +979,10 @@ dta %>%
 
 - __Number of Incidents__
 
-Table show the total number of incidents reported by RNs.    
+Table show the total number of incidents of abuse in the past year, reported by RNs.    
 
+
+The highest amount of incidents is coming form the Patients (2,469), followed by Another Nurse (1,979) and Physicians (1,822).
 
 
 ```{r incident_numbers}
@@ -801,18 +1024,108 @@ dta %>%
   rename(Perpepretor = perpetrator) %>% 
   ungroup() %>% 
   flextable::flextable() %>% 
-  set_caption("Number of incidents - by Type and Perpeprator")
-
-
+  set_caption("Number of incidents of abuse in the past year - by Type and Perpeprator - All Countries")
 
 ```
+
+
+- By Country
+
+
+```{r incidents_by_country, include=FALSE}
+by_country <- dta %>% 
+  split(.$country) %>% 
+  imap(~filter(.x, incident_any == 1) %>% 
+         select(all_of(vars_incident_all)) %>% 
+         pivot_longer(everything()) %>%
+         extract(name , 
+                 into = c("abuse", "perpetrator"), 
+                 regex = "(abuse_phys|abuse_verb|discrim|harass)_(.+)") %>% 
+         group_by(abuse, perpetrator) %>% 
+         summarise(N = sum(value), .groups = "drop") %>% 
+         mutate(
+           abuse = recode(abuse, 
+                          "abuse_phys" = "Physical abuse",
+                          "abuse_verb" = "Verbal abuse",
+                          "discrim" = "Discrimination",
+                          "harass" = "Harassment",
+           ),
+           
+           perpetrator = fct_recode(perpetrator, 
+                                    !!!c("Another nurse" = "nurse",
+                                         "Patients" = "patients",
+                                         "A physician" = "physician",
+                                         "A nurse manager" = "manager",
+                                         "An administrator" = "administration",
+                                         "Patients' families" = "families",
+                                         "Other health care personnel" = "other"
+                                         
+                                    ))#str_to_title(perpetrator)
+         ) %>%  
+         spread(abuse, N) %>% 
+         rowwise() %>% 
+         mutate(Total = sum(c_across(-perpetrator))) %>% 
+         arrange(desc(Total)) %>% 
+         rename(Perpepretor = perpetrator) %>% 
+         ungroup() %>% 
+         flextable::flextable() %>% 
+         set_caption(
+           glue::glue("Number of incidents of abuse in the past year - by Type and Perpeprator - {.y}"))
+  )
+```
+
+
+- Cyprus
+
+
+```{r}
+by_country$Cyprus
+```
+
+<br>
+
+- Spain
+
+
+```{r}
+by_country$Spain
+```
+
+<br>
+
+- Croatia
+
+
+```{r}
+by_country$Croatia
+```
+
+<br>
+
+- Poland
+
+
+```{r}
+by_country$Poland
+```
+
+<br>
+
+- Romania
+
+
+```{r}
+by_country$Romania
+```
+
+<br>
 
 
 ### Have you reported the incidents?    
 
 - Two hundred and ninety-five (295 - 45%) did not report any of the incidents that occurred
 
-- Three hundred and fifty seven (357 - 55%) did report at lest some of them.
+- Three hundred and fifty seven (357 - 55%) did report at least some of them.
 
 ```{r reported, message=FALSE, warning=FALSE}
 # 
@@ -835,11 +1148,18 @@ dta %>%
 ```
 
 
-### Reported the incident    
+### After the report of the incident    
 
 
 __What happened when you reported the incident(s)?__    
 
+<br>
+
+Overall, 43% of the RNs reported that that __there was some discussion, but nothing was done or there was no follow up__.
+
+There are significant differences across the countries. In Cyprus (the highest), this type of response was indicate by 65% of the RNs, and in Spain (the lowest) the 33%.  
+
+<br>
 
 ```{r report_what_happened}
 
@@ -859,6 +1179,7 @@ dta %>%
 
 ```
 
+<br>
 
 - _Other Please specify__
 
@@ -887,7 +1208,11 @@ What happened when you reported the incident(s)? - Other (please specify)")
 
 ### Did not report the incident    
 
-- __In case you did not report the incident (s), why did you decide not to report it?__    
+- __In case you did not report the incident (s), why did you decide not to report it?__   
+
+
+<br>
+
 
 ```{r didnotReport}
 
@@ -909,6 +1234,8 @@ dta %>%
 
 ```
 
+
+<br>
 
 - __In case you did not report the incident (s), why did you decide not to report it? - Other(please specify)__
 
@@ -939,8 +1266,13 @@ dta %>%
 
 ### Recognition is most meaningful when it comes from 
 
-```{r recognition}
 
+Overall, the source of recognition that is the most important for the RNs, is when it comes from __Patients and families__, as it is indicated by the 43% of the RNs.. This source of recognition is the most important in all countries.    
+
+<br>
+
+
+```{r recognition}
 
 dta %>% 
   filter(section == "Section C") %>% 
@@ -949,7 +1281,8 @@ dta %>%
     country
   ) %>%   
   tbl_summary(
-    by = country
+    by = country,
+    sort = everything() ~ "frequency"
   ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>%
@@ -961,28 +1294,40 @@ dta %>%
 
 ### My organization values my health and safety
 
+Overall, 46.4% of the respondents Agree or Strongly agree that with the statement "My organization values my health and safety".    
+There are significant differences across the countries. The highest on average agreement [on the scale 1 to 4] is observed in Romania [2.7 (SD=0.8)] and the lowest in Spain [2.2 (SD=0.9)] and Croatia [2.2 (SD=0.8)]
+
+<br>
+
 ```{r values_health_safety}
-
-
 dta %>% 
   filter(section == "Section C") %>% 
   transmute(
     value_health_safety = as_factor(value_health_safety),
+    val_health = 5- as.numeric(value_health_safety),
     country
   ) %>%   
+  set_variable_labels("val_health" = "Mean satisfaction (SD)") %>% 
   tbl_summary(
-    by = country
+    by = country,
+    type = list(val_health ~ "continuous")
   ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
-  modify_caption("My organization values my health and safety")
+  modify_caption("My organization values my health and safety") %>% 
+  modify_footnote(
+    update = all_stat_cols() ~ "n (%); Mean (SD) 
+    Mean agreement (SD): Mean of scores ranging from 1 (Strongly Disagree) to 4 (Strongly Agree)") 
 
 
 ```
 
 
 ### Work done at the end of a typical shift
+
+
+<br>
 
 
 ```{r work_done}
@@ -1003,7 +1348,9 @@ dta %>%
 
 ```
 
+
 ### To what extent are you evaluated on how well you contribute to a healthy work environment for you and your colleagues?
+
 
 ```{r evaluate_contribution}
 
@@ -1025,25 +1372,38 @@ dta %>%
 
 ### On the whole, how satisfied are you with your current job?
 
+Overall, 83% of the RNs are __Very or somewhat satisfied__ with their current job. RNs from Romania are more satisfied (on average, on the scale 1 to 4) [3.2 SD = 0.7] while RNs from Poland are the least satisfied [2.8 (SD=0.6)]
+
+
 ```{r overall_satisfaction}
 
 dta %>% 
   filter(section == "Section C") %>% 
   transmute(satisfied_overall = as_factor(satisfied_overall),
+            sat_overall = 5 - as.numeric(satisfied_overall),
             country) %>%   
+  set_variable_labels(sat_overall = "Mean satisfaction (SD)") %>% 
   tbl_summary(
-    by = country
+    by = country,
+    type = list(sat_overall ~ "continuous")
   ) %>% 
   modify_header(label = "") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
-  modify_caption("On the whole, how satisfied are you with your current job?")
+  modify_caption("On the whole, how satisfied are you with your current job?") %>% 
+   modify_footnote(
+    update = all_stat_cols() ~ "n (%); Mean (SD) 
+    Mean satisfaction (SD): Mean of scores ranging from 1 (Very dissatisfied) to 4 (Very satisfied)") 
 
 
 ```
 
 
 ### Plan to leave their present nursing position
+
+21% of the RNs plan to leave the nursing position within the next 3 years, 11% within the next 12 months, while 68% have no plans on leaving. 
+There are statistically significant differences across the countries, where RNs from SPAIN are more likely to leave their job within 3 or 1 year (49%), compared to Romania where RNs are least likely to leave within 1 or 3 years (15%).
+
 
 ```{r plan_to_leave}
 dta %>% 
@@ -1062,6 +1422,13 @@ dta %>%
 
 ### Influence in reconsidering plans to leave present position    
 
+<br>
+
+- Distribution of responses
+
+The table shows the distribution of responses across a range of factors influencing the reconsideration of RNs' plans to leave their present position.
+
+<br>
 
 ```{r influence_leave_job}
 
@@ -1079,14 +1446,41 @@ dta %>%
 
 ```
 
-- __Combined Proportion - Very likely, Somewhat likely__
+<br>
+
+
+- Distribution of Combined Proportion - Very likely/ Somewhat likely
+
+The table shows the distribution of the combined response of Very likely/ Somewhat likely.
+
+
+The main factor indicated by the RNs is the __Higher salary and benefits__ [81%] followed by __More opportunities for professional development__ [77%] and __Better Staffing__ [75%].
+
+The __Higher salary and benefits__ and __More opportunities for professional development__ are the main factors for all countries.
+
+<br>
+
+
+<br>
 
 ```{r influence_leave_job_combined}
+
+order <- dta %>% 
+  filter(section == "Section C") %>% 
+  select(all_of(vars_influence)) %>% 
+  mutate(across(where(is.labelled), ~if_else(. <=2, 1, 0))) %>% 
+  gather() %>% 
+  group_by(key) %>% 
+  summarise(value = mean(value, na.rm = TRUE)) %>% 
+  arrange(desc(value)) %>% 
+  pull(key)
+
 dta %>% 
   filter(section == "Section C") %>% 
   select(all_of(vars_influence), country) %>% 
   mutate(across(where(is.labelled), ~if_else(. <=2, 1, 0))) %>%
   set_variable_labels(.labels = labels[vars_influence]) %>% 
+  select(all_of(order), country) %>% 
   tbl_summary(
     by = country,
     missing = "no"
@@ -1101,6 +1495,11 @@ dta %>%
 
 
 ### Support of continuing education (CE) and specialty certification
+
+In house Continuous education is provided for 50% of the overall sample. There are differences across countries, where in Spain, the in house CE is offered in the 66% of the RNs and and in Poland the lowest (28%).
+
+Paid time off for CE is provided for 15% of the overall sample. There are differences across countries, where in Cyprus, the paid time off for CE is offered in the 35% of the RNs and and in Spain the lowest (4.7%).
+
 
 ```{r support_education}
 
