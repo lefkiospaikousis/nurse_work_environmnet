@@ -17,28 +17,24 @@ dta <- readRDS("data/raw_processed.rds")
 
 labels <- var_label(dta)
 
-
 # Demographics -------------------------------------------------------------
-
 
 dta <- dta %>% 
   mutate(country = factor(country, 
                           levels = c("EL", "ES-ES", "HR", "PL", "RO"),
-                          labels = c("Cyprus", "Spain", "Croatia", "Poland", "Romania")
-  )
+                          labels = c("Cyprus", "Spain", "Croatia", "Poland", "Romania"))
   ) 
 
 # 1 RN stated -1 as experience
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(c(experience, experience_icu), abs)
   )
 
 # Section A ---------------------------------------------------------------
 
-dta <- 
-  dta %>% 
+# fix coding values by Qualtrics
+dta <- dta %>% 
   mutate(
     aware_hwes = recode(aware_hwes, '23' = 1, '24' = 0),
     aware_hwes = ifelse(is.na(aware_hwes), 0, aware_hwes)
@@ -70,23 +66,22 @@ dta <-
 
 # Ratings are scored 1,2,4,5. need to do it 1,2,3,4 
 
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(all_of(c(vars_hwes_org, vars_hwes_unit)),
            ~ ifelse(. %in% c(4:5), . -1, .)
     )
   ) %>% 
   mutate(
-    across(all_of(c(vars_hwes_org, vars_hwes_unit)),
-           ~ labelled(., labels = c("Strongly agree" = 1,
-                                    "Agree" = 2,
-                                    "Disagree" = 3,
-                                    "Strongly disagree" = 4
-           ))
+    across(
+      all_of(c(vars_hwes_org, vars_hwes_unit)),
+      ~ labelled(., labels = c("Strongly agree" = 1,
+                               "Agree" = 2,
+                               "Disagree" = 3,
+                               "Strongly disagree" = 4)
+      )
     )
   )
-
 
 
 # Section C ---------------------------------------------------------------
@@ -103,11 +98,10 @@ dta %>% count(collab_nurses)
 dta %>% count(commun_nurses)
 dta %>% count(respect_by_nurses)
 
-# Fix. All these variables were coded 6 to 9 in the SPS
+# Fix. All these variables were coded 6 to 9 in the SPSS
 # DO it in 1 to 4
 
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(all_of(c(vars_collaboration, vars_communication, vars_respect_by)), ~ .-5)
   ) %>% 
@@ -135,8 +129,7 @@ dta %>%
 
 # Very few missing. Replace them with median
 
-dta <-   
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(all_of(c(vars_collaboration, vars_communication, vars_respect_by)),
            ~ifelse(section == "Section C" & is.na(.), round(median(., na.rm = TRUE), 0), .)
@@ -177,8 +170,7 @@ dta %>%
             n_miss = sum(is.na(value))
   )
 
-dta <-     
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(all_of(c(vars_skills_manager, vars_skills_admin)),
            ~ifelse(section == "Section C" & is.na(.), round(median(., na.rm = TRUE), 0), .)
@@ -199,8 +191,7 @@ dta %>%
 
 # Why missing in this questions? Perhaps they didn't know?
 
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(c(tolerance_verbal, tolerance_physical),
            ~ifelse(section == "Section C" & is.na(.), 3, .)
@@ -294,15 +285,13 @@ dta <- dta %>%
 dta %>% filter(discrim_physician == 100000) %>% pull(id)
 # we have 100,000 incidents.
 
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     across(c(discrim_physician, abuse_verb_physician), ~if_else(. == 100000, 100, .))
   )
 
 # Any harassment r abuse? If count is > 0
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   rowwise() %>% 
   mutate(
     incident_harass     = as.numeric(sum(c_across(all_of(vars_incident_harass))) > 0),
@@ -433,9 +422,9 @@ dta <- dta %>%
     plan_leave = recode(plan_leave, "1" = 2, "4" = 1, "5" = 3),
     plan_leave = ifelse(is.na(plan_leave) & section == "Section C", 3, plan_leave),
     plan_leave = labelled(plan_leave, labels = c(
-                                                 'Yes, within the next 3 years' = 1,
-                                                 'Yes, within the next 12 months' = 2,
-                                                 'No plans to leave within the next 3 years' = 3
+      'Yes, within the next 3 years' = 1,
+      'Yes, within the next 12 months' = 2,
+      'No plans to leave within the next 3 years' = 3
     ))
   )  
 

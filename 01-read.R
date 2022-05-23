@@ -52,12 +52,9 @@ dta <- filter(dta,
               Status != 1 # Preview response, not an actual response
 )
 
-dta %>% count(language)
-
 # Completion Rate -------------------------------------------------------
 
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     # Section they have reached
     section = case_when(
@@ -71,10 +68,9 @@ dta <-
     with_demo = Progress == 100
   ) %>% 
   set_variable_labels(
-    section = "Section reached",
+    section   = "Section reached",
     with_demo = "With demographic variables"
   ) 
-
 
 dta %>% count(section, with_demo)
 
@@ -82,21 +78,18 @@ dta %>% count(section, with_demo)
 dta %>% 
   filter(Progress >= 9) %>% 
   select(section, language) %>% 
-  tbl_summary(
-    by = language
-  ) %>% 
+  tbl_summary(by = language) %>% 
   modify_header(label ~ "") 
 
 
 # Progress = 9 means they dropped out at the participant questions
-# Remove them
+
 dta <- dta %>% filter(Progress > 9)
 
 
 # Fix column names and labels ---------------------------------------------
 
 dictionary <- readxl::read_xlsx("data/dictionary.xlsx")
-
 
 # Rename column names safely using a vector of names in the form
 # New name = Old name
@@ -127,11 +120,10 @@ cols_remove <- c("RecipientLastName",
 
 dta <- dta %>% select(-any_of(cols_remove))
 
-# Remove ids that are incomplete in Section B despite 43% progress
-# Where he fuck did this come from?
+# Remove other incomplete responses
 
 dta <- dta %>% 
-  filter(!id %in% c("R_2rHOqIPcoC6EFTU", 
+  filter(!id %in% c("R_2rHOqIPcoC6EFTU", # incomplete in Section B despite 43% progress
                     "R_RVxixGVSb4O8j8l" # this is a test form SPAIN
                      
                     )
@@ -140,9 +132,6 @@ dta <- dta %>%
 var_label(dta) %>% keep(is.null)
 
 
-
 # Save as RDS file
 
 saveRDS(dta, "data/raw_processed.rds")
-
-#saveRDS(dta_retest, "data/dta_retest.rds")
