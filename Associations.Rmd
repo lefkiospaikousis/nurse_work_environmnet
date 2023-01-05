@@ -263,7 +263,7 @@ dta %>%
     missing = "no"
   ) %>% 
   modify_header(label = "**Work Environment**") %>% 
-    modify_spanning_header(
+  modify_spanning_header(
     all_stat_cols() ~ labels$plan_leave
   ) %>% 
   modify_caption(
@@ -515,4 +515,266 @@ dta %>%
     "Correlation between Respect and Job satisfaction, Communication, Collaboration, Moral DIstress and Intention to leave")
 
 ```
+
+
+###  -	C17 with c18
+
+# C17. On the whole, how satisfied are you with your current job?
+# C18. Do you plan to leave your present nursing position?
+# C18a. How likely would each of the following be to influence you to reconsider your plans to leave your present position? 
+# this one is many questions
+
+D1. Gender 
+D4. Years of total nursing experience 
+D5. Years of nursing experience in critical/intensive care unit
+D6. Current position
+D7. Place of current work:    
+D8. Type of ICU
+D9. Country of residence: 
+
+
+<br>
+
+
+
+## Association of Demographics Vs C17. On the whole, how satisfied are you with your current job?
+
+
+```{r}
+
+dta %>%
+  filter(section == "Section C") %>%
+  select(satisfied_overall, 
+         # demo
+         gender, position, experience, 
+         experience_icu,  icu_type, country
+  ) %>%
+  mutate(
+    across(where(is.labelled), as_factor)
+  ) %>% 
+  set_variable_labels(.labels = labels[names(.)]
+                      #plan_leave = "Intention to leave within 1 or 3 years"
+  ) %>%
+  tbl_summary(
+    by = satisfied_overall,
+    missing = "no",
+    percent = "row"
+  ) %>%
+  add_p(
+    test = list(all_categorical() ~ "chisq.test")
+  ) %>% 
+  #modify_header(label = "") %>% 
+  modify_caption(
+    "Associations between Demographics and Intention to Leave") %>% 
+  modify_spanning_header(
+    all_stat_cols() ~ labels$satisfied_overall
+  ) 
+
+```
+
+<br>
+
+
+## Association of Demographics Vs C18. Do you plan to leave your present nursing position?
+
+<br>
+
+
+```{r}
+
+dta %>%
+  filter( section == "Section C" ) %>%
+  select( plan_leave, gender, position, experience, experience_icu,  icu_type, country ) %>%
+  mutate( across(where(is.labelled), as_factor) ) %>% 
+  set_variable_labels( .labels = labels[names(.)] ) %>%
+  tbl_summary( by = plan_leave, missing = "no", percent = "row" ) %>%
+  add_p( test = list(all_categorical() ~ "chisq.test") ) %>% 
+  #modify_header(label = "") %>% 
+  modify_caption( "Associations between Demographics and Intention to Leave" ) %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$plan_leave ) 
+
+```
+
+
+## Association of Demographics Vs C18a. How likely would each of the following be to influence you to reconsider your plans to leave your present position? 
+
+Responses to eleven (11) questions, were in the range of __Very likely, Somewhat likely, Not very likely__ and __Not likely at all__. The associations were performed on the event of response of __Very Likely__ to be influenced by the said factor.
+
+
+```{r include=FALSE}
+by_demo1 <- function(dta, demo_var){
+  
+  out <- dta %>% 
+    filter(section == "Section C") %>%
+    select( starts_with("influence_"), {{demo_var}} ) %>% 
+    mutate( across(starts_with("influence_"), ~if_else(. == 1, 1, 0)) ) %>% 
+    mutate(across(where(is.labelled), as_factor)) %>% 
+    set_variable_labels(.labels = labels[names(.)]) %>% 
+    tbl_summary( by = {{demo_var}}, missing = "no" ) %>%
+    add_p( test = list(all_categorical() ~ "chisq.test") ) %>% 
+    modify_header(label = "Very likely to be influenced by:") %>% 
+    modify_caption( "Associations between Demographics and 'How likely would each of the following be to influence you to reconsider your plans to leave your present position?'") 
+  
+  temp <- deparse(substitute(demo_var))
+  out %>% 
+    modify_spanning_header( all_stat_cols() ~ labels[[temp]] ) 
+  
+}
+
+
+```
+
+<br>
+
+## Gender 
+
+<br>
+
+```{r}
+by_demo1(dta, gender)
+
+```
+<br>
+
+## Current position 
+
+<br>
+
+```{r}
+by_demo1(dta, position)
+
+```
+<br>
+
+## Place of current work 
+
+<br>
+
+```{r}
+by_demo1(dta, workplace)
+
+```
+<br>
+
+## Type of ICU 
+
+<br>
+
+```{r}
+by_demo1(dta, icu_type)
+
+```
+<br>
+
+## Country 
+
+<br>
+
+```{r}
+by_demo1(dta, Country)
+
+```
+
+<br>
+
+```{r}
+t1 <- dta %>% 
+  filter(section == "Section C") %>%
+  tbl_cross_correlation(starts_with("influence_"), experience)
+
+t2 <- dta %>% 
+  filter(section == "Section C") %>%
+  tbl_cross_correlation(starts_with("influence_"), experience_icu)
+
+left_join(t1, t2) %>% 
+  rename("Likelihood of influenced by:" = colsx) %>% 
+  flextable() %>% 
+  flextable::add_header_row(
+    values = c("", 
+               "Correlation with"), 
+    colwidths = c(1,2)
+  ) %>% 
+  add_footer_row(
+    values = c("Note: Spearman correlation coefficient (r). 
+               * p < 0.05, ** p < 0.01 "), 
+    colwidths = c(3) 
+  ) %>% 
+  set_caption(
+    "Correlation between  `How likely would each of the following be to influence you to reconsider your plans to leave your present position?` and `Years of Experience (Nursing / ICU)`")
+
+```
+
+
+
+## Associations A1, A3, A5, A 6 with C17. On the whole, how satisfied are you with your current job?
+
+
+<br>
+
+
+```{r}
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(
+    implement_hwes_unit, implement_hwes_org, satisfied_nurse, quality_care,
+    satisfied_overall
+  ) %>% 
+  mutate(across(where(is.labelled), as_factor),
+         quality_care = fct_drop(quality_care)) %>% 
+  tbl_summary( by = satisfied_overall,
+               missing = "no",
+               percent = "row"
+  ) %>% 
+  add_overall() %>% 
+  add_p( test = list(all_categorical() ~ "chisq.test") ) %>% 
+  modify_header(all_stat_cols() ~ "**{level}**",label = "**Healthy Work Environmnet**") %>% 
+  modify_caption( "Associations of 'How satisfied are you with your current job' and ' Implementation of HWE standards' " ) %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$satisfied_overall ) 
+
+# Correlations
+# dta %>% 
+#   filter(section == "Section C") %>%
+#   tbl_cross_correlation(c(satisfied_nurse, quality_care), satisfied_overall) %>% 
+#   rename(" " = colsx) %>% 
+#   flextable()
+
+```
+
+
+## Associations of A1, A3, A5, A 6 with C18. Do you plan to leave your present nursing position?
+
+
+<br>
+
+
+```{r}
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(
+    implement_hwes_unit, implement_hwes_org, satisfied_nurse, quality_care,
+    plan_leave
+  ) %>% 
+  mutate(across(where(is.labelled), as_factor),
+         quality_care = fct_drop(quality_care)
+         ) %>% 
+  tbl_summary( by = plan_leave,
+               missing = "no",
+               percent = "row"
+  ) %>% 
+  add_overall() %>% 
+  add_p( test = list(all_categorical() ~ "chisq.test") ) %>% 
+  modify_header(all_stat_cols() ~ "**{level}**",label = "**Healthy Work Environmnet**") %>% 
+    modify_caption( "Associations of 'Intention to leave' and ' Implementation of HWE standards' " ) %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$plan_leave ) 
+
+```
+
+
+<br>
+
+
+
+
+
+
 
