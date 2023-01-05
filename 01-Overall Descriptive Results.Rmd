@@ -46,7 +46,7 @@ labels <- labelled::var_label(dta)
 
 ## Demographics
 
-`r xfun::numbers_to_words(nrow(dta), cap = TRUE,and = TRUE)` (`r nrow(dta)`) RNs participated in this study from 5 countries (Cyprus: n=264, Spain: n=435, Croatia: n=290, Poland: n=105, and Romania: n=317). With respect to their gender, 15% identified as Male, 52% as Female, and 33.3% preferred not to answer or didn;t provide a response. Their mean age was 37.3 years (SD = 9.9). 
+`r xfun::numbers_to_words(nrow(dta), cap = TRUE,and = TRUE)` (`r nrow(dta)`) RNs participated in this study from 5 countries (Cyprus: n=226, Spain: n=307, Croatia: n=277, Poland: n=87, and Romania: n=286).
 
 
 ```{r demographics}
@@ -1178,6 +1178,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
+  add_p(test =  everything() ~ "chisq.test") %>% 
   modify_header(label = " ") %>% 
   add_overall() %>% 
   modify_caption("What happened after you reported the incident")
