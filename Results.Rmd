@@ -33,6 +33,11 @@ flextable::set_flextable_defaults(
 
 dta <- readRDS("data/raw_cleaned.rds")
 
+missing_removed <- readxl::read_xlsx("AACN_survey-missing_values.xlsx", sheet = "MissingRemoved")
+
+dta <- dta %>% 
+  filter(id %in% missing_removed$Responseid)
+
 labels <- labelled::var_label(dta)
 
 
@@ -87,7 +92,7 @@ dta %>%
   tbl_summary(by = country,
               type = list(sat_nurse~"continuous")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
   modify_caption(labels$satisfied_nurse) %>% 
@@ -116,7 +121,7 @@ dta %>%
   tbl_summary(by = country,
               type = list(adv_nurse~"continuous")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
   modify_caption(labels$advice_nurse) %>% 
@@ -147,7 +152,7 @@ dta %>%
   tbl_summary(by = country,
               type = list(qual_care~"continuous")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
   modify_caption(labels$quality_care) %>% 
@@ -171,7 +176,7 @@ dta %>%
     country, aware_hwes = as_factor(aware_hwes)
   ) %>%
   tbl_summary(by = country) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
   modify_caption(labels$aware_hwes)
@@ -193,7 +198,7 @@ dta %>%
   select(country, implement_hwes_unit, implement_hwes_org) %>%
   mutate_all(as_factor) %>% 
   tbl_summary(by = country) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test")) %>% 
   modify_caption("Implementation of HWE standards")
@@ -216,7 +221,7 @@ dta %>%
   tbl_summary(by = country,
               type = list(everything() ~ "continuous")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   add_p() %>% 
   modify_caption("HWE-Section A: Mean level of satisfaction") %>% 
@@ -290,7 +295,7 @@ dta %>%
   ) %>% 
   add_overall() %>% 
   add_p() %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   modify_caption("HWE in your Unit: Mean (SD) level of agreement") %>% 
   modify_footnote(
     update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
@@ -354,7 +359,7 @@ dta %>%
   ) %>% 
   add_overall() %>% 
   add_p() %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   modify_caption("HWE in your Organisation: Mean (SD) level of agreement") %>% 
   modify_footnote(
     update = all_stat_cols() ~ "Mean (SD) / Mean of scores ranging from 1 (strongly disagree) to 4 (strongly agree); a higher score indicates a higher level of of the AACN standard"
@@ -397,7 +402,7 @@ dta %>%
   ) %>% 
   add_overall() %>% 
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   modify_caption("HWE in your Organisation: Proportion of Strongly Agree/ Agree") %>% 
   #as_flex_table() %>% 
   #flextable::save_as_docx(path = "HWE-Organisation-Agre_Strongly_Agree.docx") %>% 
@@ -418,7 +423,7 @@ dta %>%
   ) %>% 
   add_overall() %>% 
   add_p() %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   modify_caption("HWE in your Unit: Mean (SD) level of agreement") %>% 
   #as_flex_table() %>% 
   #flextable::save_as_docx(path = "HWE-Unit-Average_Agreement.docx") %>% 
@@ -436,7 +441,7 @@ n_secC <- dta %>% filter(section >= "Section C") %>% nrow()
 
 ```
 
-`r xfun::n2w(n_secC, cap = TRUE, and = TRUE)` RNs (`r n_secC`) completed Section B (the HWE scale).   
+`r xfun::n2w(n_secC, cap = TRUE, and = TRUE)` RNs (`r n_secC`) completed Section C.   
 
 
 ### Communication 
@@ -461,7 +466,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") ) %>% 
   modify_caption("How would you rate the quality of communication in your unit among the following?")
@@ -491,7 +496,7 @@ dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -521,7 +526,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("How would you rate the quality of collaboration in your unit among the following?")
@@ -551,7 +556,7 @@ dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -581,7 +586,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("In your unit how would you rate the respect for nurses by each of the following?")
@@ -611,7 +616,7 @@ dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -643,7 +648,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("To what extent, in your work as a nurse do you experience moral distress?")
@@ -672,7 +677,7 @@ dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -704,7 +709,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(labels$staffing_right)
@@ -733,7 +738,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("Please rate the skill of your unit Nursing managers in the following areas")
@@ -758,7 +763,7 @@ obj <- dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -807,7 +812,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("Please rate the skill of your unit Nursing administrators in the following areas")
@@ -833,7 +838,7 @@ obj <- dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -906,7 +911,7 @@ dta %>%
   tbl_summary(by = country, missing = "no",
               sort = list(everything() ~ "frequency")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption(
@@ -969,7 +974,7 @@ dta %>%
   filter(section == "Section C") %>%
   select(incident_any, country) %>% 
   tbl_summary(by = country) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   modify_caption("Proportion of RNs reporting at least one incident of abuse in the past year")
 
@@ -1140,7 +1145,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   modify_caption("Report of the incident")
 
@@ -1173,7 +1178,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   modify_caption("What happened after you reported the incident")
 
@@ -1228,7 +1233,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>% 
   modify_caption("Why did you decide not to report the incident?")
 
@@ -1284,7 +1289,7 @@ dta %>%
     by = country,
     sort = everything() ~ "frequency"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("Meaningful recognition")
@@ -1312,7 +1317,7 @@ dta %>%
     by = country,
     type = list(val_health ~ "continuous")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("My organization values my health and safety") %>% 
@@ -1341,7 +1346,7 @@ dta %>%
     by = country,
     missing_text = "(Not applicable)"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("At the end of a typical shift, to what degree do you get the following work done?")
@@ -1361,7 +1366,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("To what extent are you evaluated on how well you contribute to a healthy work environment for you and your colleagues?")
@@ -1387,7 +1392,7 @@ dta %>%
     by = country,
     type = list(sat_overall ~ "continuous")
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("On the whole, how satisfied are you with your current job?") %>% 
@@ -1413,7 +1418,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("Do you plan to leave your present nursing position?")
@@ -1439,7 +1444,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("How likely would each of the following be to influence you to reconsider your plans to leave your present position?")
@@ -1485,7 +1490,7 @@ dta %>%
     by = country,
     missing = "no"
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("How likely would each of the following be to influence you to reconsider your plans to leave your present position?\n
@@ -1512,7 +1517,7 @@ dta %>%
   tbl_summary(
     by = country
   ) %>% 
-  modify_header(label = "") %>% 
+  modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
   modify_caption("Support of continuing education (CE) and specialty certification")
