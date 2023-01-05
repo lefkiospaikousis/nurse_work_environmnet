@@ -22,12 +22,16 @@ text_vars <- c(
 
 ## Section A ----
 
+vars_sectionA <- c("satisfied_nurse", "advice_nurse", "quality_care", "aware_hwes",
+                   
+                   "implement_hwes_unit", "implement_hwes_org")
 
 ## Section B: Critical Elements of a Healthy Work Environment Scale ----
 
 vars_hwes_org <- paste0("hwes_", 1:16, "_org")   # In your organisation
 vars_hwes_unit <- paste0("hwes_", 1:16, "_unit")  # In your work unit
 
+vars_sectionB <- c(vars_hwes_org, vars_hwes_unit)
 
 ## Section C ---- 
 
@@ -146,7 +150,7 @@ theme_gtsummary <-
     "add_p.tbl_summary-attr:test.continuous_by2" = "t.test",
     "add_p.tbl_summary-attr:test.continuous" = "aov",
     "add_p.tbl_summary-attr:test.categorical" = "chisq.test",
-    "add_p.tbl_summary-attr:test.categorical" = "fisher.test",
+   # "add_p.tbl_summary-attr:test.categorical" = "fisher.test",
     "pkgwide-str:theme_name" = "Improvast Theme"
   )
 
