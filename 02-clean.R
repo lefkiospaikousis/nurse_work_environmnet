@@ -13,11 +13,13 @@ library(tidyverse)
 source("00-variable_info.R", local = TRUE)
 source("00-helper_functions.R", local = TRUE)
 
-dta <- readRDS("data/raw_processed.rds")
+dta_orgl <- readRDS("data/raw_processed.rds")
 
-labels <- var_label(dta)
+labels <- var_label(dta_orgl)
+
 
 # Demographics -------------------------------------------------------------
+dta <- dta_orgl
 
 dta <- dta %>% 
   mutate(country = factor(country, 
@@ -186,7 +188,7 @@ dta <- dta %>%
 dta %>% 
   filter(section == "Section C") %>% 
   select(starts_with("tolerance"), country) %>% 
-  mutate_all(as_factor) %>% 
+  #mutate_all(as_factor) %>% 
   count(country, tolerance_verbal)
 
 # Why missing in this questions? Perhaps they didn't know?
@@ -389,7 +391,7 @@ dta %>%
 
 dta %>% 
   filter(section == "Section C") %>% 
-  count(evaluate_contrib_hwe)
+  count(satisfied_overall)
 
 
 # Replace missing only for satisfied overall
@@ -456,7 +458,6 @@ dta %>%
 
 # Many missing. Do not replace!! 
 # TODO Remember to use the fct_explicit_na when plotting and for counting %
-
 
 
 # Locate Tests - Retests -----------------------------------------------------------------
@@ -530,8 +531,7 @@ var_label(dta) %>% keep(is.null)
 
 # Create AACN Dimensions ----------------------------------------------------
 
-dta <- 
-  dta %>% 
+dta <- dta %>% 
   mutate(
     skilled_communication_unit  = score(vars_hwes_unit[1:2]),
     true_collaboration_unit     = score(vars_hwes_unit[3:5]),
@@ -549,7 +549,6 @@ dta <-
     authentic_leadership_org   = score(vars_hwes_org[14:16])
   ) 
 
-
 var_label(dta) <- scale_labels
 
 # Fix labels again --------------------------------------------------------
@@ -561,6 +560,55 @@ var_label(dta) <- labels
 # Do all have labels?
 var_label(dta) %>% keep(is.null)
 var_label(dta_retest) %>% keep(is.null)
+
+# Missing values ----
+library(naniar)
+
+secA <- dta %>% 
+  select(country, id, section, all_of(vars_sectionA)) %>% 
+  add_n_miss(label = "SECTION_A") %>% 
+  select(id, section, ends_with("_all"))
+
+secB <- dta %>% 
+  select(country,id, section, all_of(vars_sectionB)) %>% 
+  add_n_miss(label = "SECTION_B") %>% 
+  select(id, section, ends_with("_all"))
+
+
+# Sec C
+temp <- dta %>% 
+  relocate(country,id, section) %>% 
+  select(-all_of(c(vars_sectionA, vars_sectionB))) %>% 
+  select(-c(StartDate:date), -c(browser_language:part4)) %>% 
+  select(-ends_with("other")) %>% 
+  select(-starts_with("text_")) %>% 
+  select(-ends_with("_after")) %>% 
+  select(-all_of(c(vars_demo, "icu_type_2", "with_demo",
+                   "institution_name", "residence", #"id_part", 
+                   "no_report_why"
+  )
+  )) 
+
+n_cols_C <- ncol(temp) - 2
+
+secC <- temp %>% 
+  #select(id, section, all_of(vars_sectionC)) %>% 
+  add_n_miss(label = "SECTION_C") %>% 
+  select(country,id, section, ends_with("_all"))
+
+final <- reduce(
+  list(secA, secB, secC), left_join
+) 
+# %>% 
+#   replace_na(
+#     list(
+#       SECTION_A_all = length(vars_sectionA),
+#       SECTION_B_all = length(vars_sectionB),
+#       SECTION_C_all = n_cols_C
+#       )
+#   )
+
+writexl::write_xlsx(final, "missing_valuesImputed1.xlsx")
 
 # Save as RDS file
 
