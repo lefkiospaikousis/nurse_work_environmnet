@@ -273,7 +273,7 @@ There is good to excellent internal consistency in all groups of items (alpha ra
 ```{r include=FALSE}
 
 
-cronbach <- function(.data, .vars){
+cronbach <- function(.data, .vars, .check.keys = FALSE){
   
   
   stopifnot(inherits(.data, "data.frame"))
@@ -294,7 +294,7 @@ cronbach <- function(.data, .vars){
   n_items <- length(posX)
   
   alpha <- dta %>% 
-    psych::alpha(check.keys=FALSE) %>% .$total %>% .$std.alpha
+    psych::alpha(check.keys = .check.keys) %>% .$total %>% .$std.alpha
   
   tibble(
     n = n_items,
