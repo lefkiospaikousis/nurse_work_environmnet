@@ -19,35 +19,37 @@ flextable::set_flextable_defaults(
 
 dta <- readRDS("data/raw_cleaned.rds")
 
-labels <- labelled::var_label(dta)
-
+missing_removed <- readxl::read_xlsx("AACN_survey-missing_values.xlsx", sheet = "MissingRemoved")
 
 vars_remove <- c("StartDate", "EndDate", "Status", "IPAddress", "id_part")
 
-
-spain <- 
-  dta %>% 
-  filter(country == "Spain") %>% 
+dta <- dta %>% 
+  filter(id %in% missing_removed$Responseid) %>% 
   select( -any_of(vars_remove) )
 
-
-write_sav(spain, "data/Country-data-Spain.sav")
-saveRDS(spain, "data/Country-data-Spain.rds")
+labels <- labelled::var_label(dta)
 
 
-spain_fct <- spain %>% 
+country <- "Cyprus"
+
+country_data <- dta %>% 
+  filter(country == !!country) %>% 
+  select( -any_of(vars_remove) )
+
+country_data_fct <- country_data %>% 
   mutate(
     across(where(is.labelled), as_factor)
   )
 
-writexl::write_xlsx(spain_fct, "data/Country-data-Spain.xlsx")
+write_sav(country_data, glue::glue("data/Country-data-{country}.sav"))
+saveRDS(country_data, glue::glue("data/Country-data-{country}.rds"))
+writexl::write_xlsx(country_data, glue::glue("data/Country-data-{country}.xlsx"))
 
 
-dictionary <- labelled::generate_dictionary(spain) 
+#dictionary <- labelled::generate_dictionary(spain) 
+#writexl::write_xlsx(dictionary, "data/dictionary-spain.xlsx")
 
-writexl::write_xlsx(dictionary, "data/dictionary-spain.xlsx")
 
-
-vtable::vtable(spain, file = "data/dictionary-numeric.html")
-vtable::vtable(spain_fct, file = "data/dictionary-text.html")
+vtable::vtable(dta, file = "data/dictionary-numericValues-in-Reponses.html")
+vtable::vtable(dta, file = "data/dictionary-textValues-in-Responses.html")
 
