@@ -1,9 +1,4 @@
 
-library(gtsummary)
-library(haven)
-library(labelled)
-library(flextable)
-library(glue)
 library(tidyverse)
 
 # Setup -------------------------------------------------------------------
@@ -11,11 +6,6 @@ library(tidyverse)
 source("00-variable_info.R", local = TRUE)
 source("00-helper_functions.R", local = TRUE)
 
-gtsummary::set_gtsummary_theme(theme_gtsummary)
-
-flextable::set_flextable_defaults(
-  table.layout = "autofit"
-)
 
 dta <- readRDS("data/raw_cleaned.rds")
 
@@ -30,20 +20,20 @@ dta <- dta %>%
 labels <- labelled::var_label(dta)
 
 
-country <- "Cyprus"
+country <- "ALL_Countries-missing_not_removed"
 
 country_data <- dta %>% 
-  filter(country == !!country) %>% 
+  #filter(country == !!country) %>% 
   select( -any_of(vars_remove) )
 
 country_data_fct <- country_data %>% 
   mutate(
-    across(where(is.labelled), as_factor)
+    across(where(labelled::is.labelled), as_factor)
   )
 
-write_sav(country_data, glue::glue("data/Country-data-{country}.sav"))
-saveRDS(country_data, glue::glue("data/Country-data-{country}.rds"))
-writexl::write_xlsx(country_data, glue::glue("data/Country-data-{country}.xlsx"))
+haven::write_sav(country_data, glue::glue("data/FULL DATA/Country-data-{country}.sav"))
+saveRDS(country_data, glue::glue("data/FULL DATA/Country-data-{country}.rds"))
+writexl::write_xlsx(country_data, glue::glue("data/FULL DATA/Country-data-{country}.xlsx"))
 
 
 #dictionary <- labelled::generate_dictionary(spain) 
