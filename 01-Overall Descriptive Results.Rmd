@@ -792,13 +792,13 @@ obj
 ```
 
 
-### Skills of unit's nursing administrators
+### Skills of hospitals nursing administrators
 
 <br>
 
 - Distribution of responses
 
-The table shows the distribution of responses for the question __Please rate the skill of your unit Nursing administrators in the following areas__.
+The table shows the distribution of responses for the question __Please rate the skill of your hospital Nursing administrators in the following areas__.
 
 <br>
 
@@ -815,7 +815,7 @@ dta %>%
   modify_header(label = " ") %>% 
   add_overall() %>%
   add_p(list(all_categorical() ~ "chisq.test") )%>% 
-  modify_caption("Please rate the skill of your unit Nursing administrators in the following areas")
+  modify_caption("Please rate the skill of your hospital Nursing administrators in the following areas")
 
 ```
 
@@ -868,6 +868,28 @@ There are statistically significant differences across the countries.
 ```{r}
 obj
 ```
+
+### Does your organization have a zero tolerance policy on verbal/ phycical abuse?
+
+```{r}
+dta %>% 
+  filter(section == "Section C") %>% 
+  select(country, tolerance_verbal, tolerance_physical)  |> 
+  mutate(across(where(is.labelled), as_factor)) %>%  
+  tbl_summary(
+    by = country,
+    missing = "no"
+  ) %>% 
+  modify_header(label = " ") %>% 
+  add_overall() %>%
+  add_p(list(all_categorical() ~ "chisq.test") )%>% 
+  modify_caption(
+    "Does your organization have a zero tolerance policy on verbal/ phycical abuse?") |> 
+  as_flex_table() |> 
+  save_as_docx(path = "delete.docx")
+
+```
+
 
 
 ### Main factors that keep RNs working in their current organization
