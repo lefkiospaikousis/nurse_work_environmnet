@@ -1,0 +1,486 @@
+---
+title: "AACN Survey - 2022"
+subtitle: "Associations of HWE with Demographics"
+date: "`r format(Sys.time(), '%B, %Y')`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r include=FALSE}
+# Libraries ---------------------------------------------------------------
+
+library(gtsummary)
+library(haven)
+library(labelled)
+library(flextable)
+library(glue)
+library(tidyverse)
+
+# Setup -------------------------------------------------------------------
+
+source("00-variable_info.R", local = TRUE)
+source("00-helper_functions.R", local = TRUE)
+
+gtsummary::set_gtsummary_theme(theme_gtsummary)
+
+flextable::set_flextable_defaults(
+  table.layout = "autofit"
+)
+
+dta <- readRDS("data/raw_cleaned.rds")
+
+labels <- labelled::var_label(dta)
+
+
+missing_removed <- readxl::read_xlsx("AACN_survey-missing_values.xlsx", sheet = "MissingRemoved")
+
+dta <- dta %>% filter(id %in% missing_removed$Responseid)
+
+# in case Respect by variables are shown independenly
+new_respect_labs <- labels[vars_respect_by] %>%  map(~ paste0("Respect by:", .))
+
+new_comm_labs <- labels[vars_communication] %>%  map(~ paste0(., " rated Good or Excellent"))
+
+```
+
+
+<br>
+
+
+## Section B WITH DEMOGRAPHICS 
+
+<br>
+
+## Gender
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = gender,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$gender ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$gender, "` and HWE standards in the UNIT")
+  )
+
+```
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = gender,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$gender ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$gender, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## University education
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = uni_education,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$uni_education ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$uni_education, "` and HWE standards in the UNIT")
+  )
+
+```
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = uni_education,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$uni_education ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$uni_education, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## Did you attend a special training/education in critical/intensive care nursing?
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = training,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$training ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$training, "` and HWE standards in the UNIT")
+  )
+
+```
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = training,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$training ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$training, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## Current position
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section  >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = position,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$position ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$position, "` and HWE standards in the UNIT")
+  )
+
+```
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >="Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = position,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$position ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$position, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## Place of current work
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section  >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = workplace,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$workplace ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$workplace, "` and HWE standards in the UNIT")
+  )
+
+```
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >="Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = workplace,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$workplace ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$workplace, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## Type of institution
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section  >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = institution_type,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$institution_type ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$institution_type, "` and HWE standards in the UNIT")
+  )
+
+```
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >="Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = institution_type,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$institution_type ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$institution_type, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## Type of ICU
+
+<br>
+
+```{r}
+
+dta %>% 
+  filter(section  >= "Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = icu_type,
+    include = all_of(dim__scales_unit),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$icu_type ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$icu_type, "` and HWE standards in the UNIT")
+  )
+
+```
+
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >="Section B") %>% 
+  mutate(across(where(is.labelled), as_factor) ) %>% 
+  tbl_summary(
+    by = icu_type,
+    include = all_of(dim__scales_org),
+    missing = "no",
+    type = everything() ~ "continuous"
+  ) %>% 
+  add_overall() %>% 
+  add_p() %>% 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols() ~ labels$icu_type ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$icu_type, "` and HWE standards in the ORGANISATION")
+  )
+
+```
+
+<br>
+
+\newpage
+
+## Age and Experience
+
+```{r}
+
+dta %>% 
+  filter(section >="Section B") |> 
+  tbl_cross_correlation(
+    all_of(dim__scales_org), c(age, experience, experience_icu)
+  ) |> 
+  rename("HWE standards (ORGANISATION)" = colsx) |> 
+  flextable() |> 
+  flextable::add_header_row(
+    values = c("", 
+               "Correlation with"), 
+    colwidths = c(1,3)
+  ) %>% 
+  add_footer_row(
+    values = c("Note: Spearman correlation coefficient (r). 
+               * p < 0.05, ** p < 0.01 "), 
+    colwidths = c(4) 
+  ) %>% 
+  set_caption(
+    "Correlation of `HWE standards in the Organisation` with `Age` and Experience")
+
+```
+
+
+
+<br>
+
+
+```{r}
+
+dta %>% 
+  filter(section >="Section B") |> 
+  tbl_cross_correlation(
+    all_of(dim__scales_unit), c(age, experience, experience_icu)
+  ) |> 
+  rename("HWE standards (UNIT)" = colsx) |> 
+  flextable() |> 
+  flextable::add_header_row(
+    values = c("", 
+               "Correlation with"), 
+    colwidths = c(1,3)
+  ) %>% 
+  add_footer_row(
+    values = c("Note: Spearman correlation coefficient (r). 
+               * p < 0.05, ** p < 0.01 "), 
+    colwidths = c(4) 
+  ) %>% 
+  set_caption(
+    "Correlation of `HWE standards in the Unit` with `Age` and Experience")
+
+```
+
+

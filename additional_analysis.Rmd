@@ -1,0 +1,234 @@
+---
+title: "Additional Analysis"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r include=FALSE}
+# Libraries ---------------------------------------------------------------
+
+library(gtsummary)
+library(haven)
+library(labelled)
+library(flextable)
+library(glue)
+library(tidyverse)
+
+# Setup -------------------------------------------------------------------
+
+source("00-variable_info.R", local = TRUE)
+source("00-helper_functions.R", local = TRUE)
+
+gtsummary::set_gtsummary_theme(theme_gtsummary)
+
+flextable::set_flextable_defaults(
+  table.layout = "autofit"
+)
+
+dta <- readRDS("data/raw_cleaned.rds")
+
+labels <- labelled::var_label(dta)
+
+
+missing_removed <- readxl::read_xlsx("AACN_survey-missing_values.xlsx", sheet = "MissingRemoved")
+
+dta <- dta %>% filter(id %in% missing_removed$Responseid)
+
+# in case Respect by variables are shown independenly
+new_respect_labs <- labels[vars_respect_by] %>%  map(~ paste0("Respect by:", .))
+
+new_comm_labs <- labels[vars_communication] %>%  map(~ paste0(., " rated Good or Excellent"))
+
+```
+
+
+## Extra associations 
+
+<br>
+
+- 1.	Section A: Συσχέτιση Α3 ΕΡΩΤΗΣΗ ΜΕ Α5 
+
+<br>
+
+
+There is an association between `r labels$quality_care` and `r labels$implement_hwes_unit` (p < 0.001).
+
+If the unit has __Fully implemented__ Healthy Work Environment Standards, then 73% of the respondents describe the quality of care as Excellent, in contrast to when __Not at all implemented__ where only 17% of the respondents describe the quality of care as Excellent.
+
+<br>
+
+
+
+```{r}
+
+dta %>% 
+  mutate(across(
+    c(quality_care, implement_hwes_unit)
+    , as_factor)) |> 
+  #count(quality_care)
+  mutate(quality_care = fct_drop(quality_care)) |> 
+  tbl_summary(
+    by = implement_hwes_unit,
+    include = quality_care
+  ) |> 
+  add_overall() |> 
+  add_p(test = all_categorical() ~ "chisq.test") |> 
+  modify_header(label = " ") %>% 
+  modify_spanning_header( all_stat_cols(stat_0 = FALSE) ~ labels$implement_hwes_unit ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$implement_hwes_unit, "` and `", labels$quality_care, "`" )
+  )
+
+
+```
+
+
+<br>
+
+
+Section B: Ποσοστά αυτών που απάντησαν Strogly Agree, Agree, Disagree, Strongly disagree σε όλα τα AΑCN items για Organisation και για unit 
+
+
+<br>
+
+- Organisation
+
+<br>
+
+
+```{r}
+dta |> 
+  filter(section >= "Section B") |> 
+  transmute(across(all_of(vars_hwes_org), as_factor)) |> 
+  transmute(across(all_of(vars_hwes_org), fct_explicit_na, "(N/A)")) |> 
+  aggregate_wide() |> 
+  rename("HWE in your organisation" = item) |> 
+  flextable() |> 
+  add_footer_lines("(N/A): Did not provide an answer")
+
+
+```
+
+<br>
+
+- Unit
+
+<br>
+
+
+```{r}
+dta |> 
+  filter(section >= "Section B") |> 
+  transmute(across(all_of(vars_hwes_unit), as_factor)) |> 
+  transmute(across(all_of(vars_hwes_unit), fct_explicit_na, "(N/A)")) |> 
+  aggregate_wide() |> 
+  rename("HWE in your unit" = item) |> 
+  flextable() |> 
+  add_footer_lines("(N/A): Did not provide an answer")
+
+```
+
+
+<br>
+
+
+3.	Θέλουμε να δούμε με ομαδοποίηση των απαντήσεων ( όπως περιγράφεται πιο κάτω)  εάν υπάρχουν relationships μεταξύ αυτών που στις ερωτήσεις Α5 ( for the unit) και Α6 ( for the organization) απάντησαν ότι τα HWE standards
+
+
+<br> 
+
+
+```{r include=FALSE}
+dta_cross <- dta |> 
+  filter(section >= "Section B") |> 
+  mutate(across(all_of(c(vars_hwes_org, vars_hwes_unit)), as_factor)) |> 
+  mutate(
+    across(all_of(c(vars_hwes_org, vars_hwes_unit)), ~ fct_collapse(
+      ., 'Strongly Agree/ Agree' = c("Strongly agree", "Agree"),
+      "Strongly disagree/ Disagree" = c("Strongly disagree", "Disagree")
+    ))
+  ) |> 
+  mutate(
+    across(
+      c(implement_hwes_unit, implement_hwes_org), as_factor
+    )) |> 
+  mutate(
+    across(c(implement_hwes_unit, implement_hwes_org), function(x){
+      
+      fct_collapse(x, 
+                   "Well on the way/Fully Implemented" = c("Well on the way", "Fully implemented"),
+                   "Not at all/Just beginning" = c("Not at all", "Just beginning")
+      ) 
+    } 
+    )) 
+```
+
+
+- Α5 ( for the organisation) 
+
+
+There is an association of whether the Organisation has implemented any HWE standards, with the HWE scale in all items (p<0.001).   
+
+
+For example, of the nurses whose unit has not implemented (or just beginning to implement) HWE standards, 57% Agree or Strongly Agree that `RNs are as proficient in communication skills as they are in clinical skills.`, while of the nurses whose unit fully implements or well on the way to implement HWE standards, a higher proportion (86%) Agree or Strongly Agree to the statement.
+
+Similar with the rest of the items of the HWE
+
+<br> 
+
+
+
+```{r}
+dta_cross |> 
+  filter(implement_hwes_org != "Do not know") |> 
+  mutate(implement_hwes_org = fct_drop(implement_hwes_org)) |> 
+  tbl_summary(
+    by = implement_hwes_org,
+    include = all_of(vars_hwes_org),
+    missing = "no"
+  ) |> 
+  add_p() |> 
+  modify_header(label = "HWE in your organisation") %>% 
+  modify_spanning_header( all_stat_cols(stat_0 = FALSE) ~ labels$implement_hwes_org ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$implement_hwes_org, "` and HWE in your unit" )
+  )
+
+```
+
+
+- Α5 ( for the unit) 
+
+There is an association of whether the Unit has implemented any HWE standards, with the HWE scale in all items (p<0.001).   
+
+
+For example, of the nurses whose unit has not implemented (or just beginning to implement) HWE standards, 66% Agree or Strongly Agree that `RNs are as proficient in communication skills as they are in clinical skills.`, while of the nurses whose unit fully implements or well on the way to implement HWE standards, a higher proportion (90%) Agree or Strongly Agree to the statement.
+
+Similar with the rest of the items of the HWE
+
+<br> 
+
+
+```{r}
+dta_cross |> 
+  filter(implement_hwes_unit != "Do not know") |> 
+  mutate(implement_hwes_unit = fct_drop(implement_hwes_unit)) |> 
+  tbl_summary(
+    by = implement_hwes_unit,
+    include = all_of(vars_hwes_unit),
+    missing = "no"
+  ) |> 
+  add_p() |> 
+  modify_header(label = "HWE in your unit") %>% 
+  modify_spanning_header( all_stat_cols(stat_0 = FALSE) ~ labels$implement_hwes_unit ) %>% 
+  modify_caption(paste0(
+    "Association between `", labels$implement_hwes_unit, "` and HWE in your unit" )
+  )
+
+```
