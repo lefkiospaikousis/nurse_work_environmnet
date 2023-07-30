@@ -146,7 +146,9 @@ dim__scales_org  <- dim_scales[grepl("_org$", dim_scales)]
 theme_gtsummary <-   
   list(
     "tbl_summary-str:continuous_stat" = "{mean} ({sd})",
-    "tbl_summary-arg:digits" = list(all_continuous() ~ c(1, 1)),
+    "tbl_summary-arg:digits" = list(all_continuous() ~ c(1, 1),
+                                    all_categorical() ~ c(0, 1)
+                                    ),
     "add_p.tbl_summary-attr:test.continuous_by2" = "t.test",
     "add_p.tbl_summary-attr:test.continuous" = "aov",
     "add_p.tbl_summary-attr:test.categorical" = "chisq.test",
