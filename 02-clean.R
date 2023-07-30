@@ -532,6 +532,10 @@ var_label(dta) %>% keep(is.null)
 # Create AACN Dimensions ----------------------------------------------------
 
 dta <- dta %>% 
+  # recode items, for higher score -> higer aggreement for the dimension
+  mutate(
+    across(all_of(c(vars_hwes_org, vars_hwes_unit)), ~ 5 - .)
+  ) |> 
   mutate(
     skilled_communication_unit  = score(vars_hwes_unit[1:2]),
     true_collaboration_unit     = score(vars_hwes_unit[3:5]),

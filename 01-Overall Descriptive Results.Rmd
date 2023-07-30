@@ -54,7 +54,7 @@ labels <- labelled::var_label(dta)
 dta %>% 
   mutate(
     across(all_of(vars_demo) & where(is.labelled), 
-           ~ fct_explicit_na(as_factor(.), )
+           ~ fct_na_value_to_level(as_factor(.), "(Missing)")
     )
   ) %>% 
   select(country, all_of(vars_demo)) %>% 

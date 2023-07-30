@@ -671,7 +671,7 @@ by_demo1(dta, icu_type)
 <br>
 
 ```{r}
-by_demo1(dta, Country)
+by_demo1(dta, country)
 
 ```
 

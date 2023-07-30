@@ -3,8 +3,8 @@ title: "AACN Survey - 2022"
 subtitle: "Associations"
 date: "`r format(Sys.time(), '%B, %Y')`"
 output:
-  html_document: default
   word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}

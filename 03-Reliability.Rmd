@@ -272,7 +272,6 @@ There is good to excellent internal consistency in all groups of items (alpha ra
 
 ```{r include=FALSE}
 
-
 cronbach <- function(.data, .vars, .check.keys = FALSE){
   
   
@@ -303,28 +302,29 @@ cronbach <- function(.data, .vars, .check.keys = FALSE){
   )
 }
  
+dta <- readRDS("data/raw_cleaned.rds")
+
+missing_removed <- readxl::read_xlsx("AACN_survey-missing_values.xlsx", sheet = "MissingRemoved")
+
+dta <- dta %>% 
+  filter(id %in% missing_removed$Responseid)
+
 cronbach(dta, all_of(vars_sectionA))
-
-
 
 ```
 
 
-
-
 ```{r}
-
-dta_test <- dta %>% filter(test == "test")
 
 list_of_alphas <- 
   list(
-    org   = cronbach(dta_test, vars_hwes_org),
-    unit  = cronbach(dta_test, vars_hwes_unit),
-    comm  = cronbach(dta_test, vars_communication),
-    coll  = cronbach(dta_test, vars_collaboration),
-    resp  = cronbach(dta_test, vars_respect_by),
-    mskil = cronbach(dta_test, vars_skills_manager),
-    askil = cronbach(dta_test, vars_skills_admin)
+    org   = cronbach(dta, vars_hwes_org),
+    unit  = cronbach(dta, vars_hwes_unit),
+    comm  = cronbach(dta, vars_communication),
+    coll  = cronbach(dta, vars_collaboration),
+    resp  = cronbach(dta, vars_respect_by),
+    mskil = cronbach(dta, vars_skills_manager),
+    askil = cronbach(dta, vars_skills_admin)
     
   ) 
 
